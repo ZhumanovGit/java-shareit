@@ -1,0 +1,66 @@
+package ru.practicum.shareit.user.repository;
+
+import org.springframework.stereotype.Repository;
+import ru.practicum.shareit.user.User;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+@Repository
+public class InMemoryUserRepository implements UserRepository {
+    private final Map<Long, User> users = new HashMap<>();
+    private final Map<Long, String> emails = new HashMap<>();
+
+    private static long id;
+
+    private long increaseId() {
+        return ++id;
+    }
+
+    @Override
+    public User createUser(User user) {
+        user.setId(increaseId());
+        long userId = user.getId();
+        users.put(userId, user);
+        emails.put(userId, user.getEmail());
+        return user;
+    }
+
+    @Override
+    public void updateUser(User user) {
+        long userId = user.getId();
+        emails.put(userId, user.getEmail());
+        users.put(userId, user);
+    }
+
+    @Override
+    public Optional<User> getUserById(long id) {
+        return Optional.of(users.get(id));
+    }
+
+    @Override
+    public List<User> getUsers() {
+        return new ArrayList<>(users.values());
+    }
+
+    @Override
+    public void deleteUserById(long id) {
+        User user = users.get(id);
+        emails.remove(id);
+        users.remove(id);
+    }
+
+    @Override
+    public void deleteAllUsers() {
+        emails.clear();
+        users.clear();
+    }
+
+    @Override
+    public boolean isEmailExists(String email) {
+        return emails.containsValue(email);
+    }
+}
