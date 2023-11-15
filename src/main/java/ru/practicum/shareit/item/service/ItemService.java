@@ -16,7 +16,7 @@ public interface ItemService {
 
     List<Item> getItemsByOwnerId(long ownerId);
 
-    List<Item> getItemsByName(String substring);
+    List<Item> getItemsByNameOrDesc(String substring);
 
     void deleteItemById(long id);
 

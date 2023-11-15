@@ -11,6 +11,7 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -30,6 +31,7 @@ public class ItemServiceImpl implements ItemService {
 
         User owner = userRepository.getUserById(ownerId)
                 .orElseThrow(() -> new UserNotFoundException("Пользователь с id = " + ownerId + " не найден"));
+        ;
         item.setOwner(owner);
 
         return itemRepository.createItem(item);
@@ -45,8 +47,8 @@ public class ItemServiceImpl implements ItemService {
             throw new ItemValidateException("Id владельца не может быть отрицательным");
         }
 
-        if (itemUpdates.getOwner().getId() != ownerId) {
-            throw new ItemValidateException("Объект не может сменить владельца");
+        if (item.getOwner().getId() != ownerId) {
+            throw new ItemNotFoundException("Не найден данный объект у данного пользователя");
         }
 
         String newName = itemUpdates.getName();
@@ -58,6 +60,7 @@ public class ItemServiceImpl implements ItemService {
         if (newDescription != null) {
             item.setDescription(newDescription);
         }
+
         Boolean newStatus = itemUpdates.getAvailable();
         if (newStatus != null) {
             item.setAvailable(newStatus);
@@ -85,7 +88,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<Item> getItemsByOwnerId(long ownerId) {
         if (ownerId < 0) {
-            throw new ItemValidateException("Id владельца не может быть отрицательным");
+            throw new ItemValidateException("id владельца не может быть отрицательным");
         }
 
         userRepository.getUserById(ownerId)
@@ -95,9 +98,12 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<Item> getItemsByName(String substring) {
+    public List<Item> getItemsByNameOrDesc(String substring) {
+        if (substring.isBlank()) {
+            return new ArrayList<>();
+        }
         String needSubstring = substring.toLowerCase();
-        return itemRepository.getItemsByName(needSubstring);
+        return itemRepository.getItemsByNameOrDesc(needSubstring);
     }
 
 

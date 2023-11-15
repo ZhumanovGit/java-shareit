@@ -49,9 +49,10 @@ public class InMemoryItemRepository implements ItemRepository {
     }
 
     @Override
-    public List<Item> getItemsByName(String string) {
+    public List<Item> getItemsByNameOrDesc(String string) {
         return items.values().stream()
-                .filter(item -> item.getName().contains(string))
+                .filter(item -> item.getName().toLowerCase().contains(string)
+                        || item.getDescription().toLowerCase().contains(string))
                 .filter(Item::getAvailable)
                 .collect(Collectors.toList());
     }

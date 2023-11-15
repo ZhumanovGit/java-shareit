@@ -38,7 +38,7 @@ public class ItemController {
             items = itemService.getItems();
             log.info("Получены все вещи");
         } else {
-            log.info("Обработка запроса на получение всез вещей пользователя с id = {}}", ownerId);
+            log.info("Обработка запроса на получение всех вещей пользователя с id = {}", ownerId);
             items = itemService.getItemsByOwnerId(ownerId);
             log.info("Получены все вещи пользователя с id = {}", ownerId);
         }
@@ -58,7 +58,7 @@ public class ItemController {
     @GetMapping("/search")
     public List<ItemDto> searchItems(@RequestParam(value = "text") String text) {
         log.info("Обработка запроса на выполнение поиска по строке {}", text);
-        List<ItemDto> items = itemService.getItemsByName(text).stream()
+        List<ItemDto> items = itemService.getItemsByNameOrDesc(text).stream()
                 .map(mapper::itemToItemDto)
                 .collect(Collectors.toList());
         log.info("Получен список длиной {}", items.size());

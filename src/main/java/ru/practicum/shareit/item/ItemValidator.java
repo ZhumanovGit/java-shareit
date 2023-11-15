@@ -26,7 +26,7 @@ public class ItemValidator {
             throw new ItemValidateException("Имя объекта не может быть пустым");
         }
 
-        if (item.getName() != null && item.getDescription().isBlank()) {
+        if (item.getDescription() != null && item.getDescription().isBlank()) {
             throw new ItemValidateException("Описание обекта не может быть пустым");
         }
     }
