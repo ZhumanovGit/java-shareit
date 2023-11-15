@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
     public User createUser(User user) {
         validator.validateUserForCreate(user);
 
-        if (userRepository.isEmailExists(user.getEmail())) {
+        if (userRepository.isEmailBooked(user)) {
             throw new UserEmailIsAlreadyExists("Пользователь с данной почтой уже зарегистрирован в системе");
         }
 
@@ -44,10 +44,12 @@ public class UserServiceImpl implements UserService {
 
         String newEmail = userUpdates.getEmail();
         if (newEmail != null) {
-            if (userRepository.isEmailExists(newEmail)) {
-                throw new UserEmailIsAlreadyExists("Пользователь с данной почтой уже зарегистрирован в системе");
+            if (!newEmail.equals(user.getEmail())) {
+                if (userRepository.isEmailBooked(userUpdates)) {
+                    throw new UserEmailIsAlreadyExists("Пользователь с данной почтой уже зарегистрирован в системе");
+                }
+                user.setEmail(newEmail);
             }
-            user.setEmail(newEmail);
         }
 
         userRepository.updateUser(user);

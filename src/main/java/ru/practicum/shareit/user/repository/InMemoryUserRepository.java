@@ -38,7 +38,8 @@ public class InMemoryUserRepository implements UserRepository {
 
     @Override
     public Optional<User> getUserById(long id) {
-        return Optional.of(users.get(id));
+
+        return Optional.ofNullable(users.get(id));
     }
 
     @Override
@@ -60,7 +61,20 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     @Override
-    public boolean isEmailExists(String email) {
-        return emails.containsValue(email);
+    public boolean isEmailBooked(User user) {
+        String userEmail = user.getEmail();
+        if (!emails.containsValue(userEmail)) {
+            return false;
+        }
+        Long userId = user.getId();
+        if (userId == null) {
+            return true;
+        }
+
+        if (emails.get(userId).equals(userEmail)) {
+            return false;
+        }
+
+        return true;
     }
 }

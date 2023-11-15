@@ -19,5 +19,5 @@ public interface UserRepository {
 
     void deleteAllUsers();
 
-    boolean isEmailExists(String email);
+    boolean isEmailBooked(User user);
 }
