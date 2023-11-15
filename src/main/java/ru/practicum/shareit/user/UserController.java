@@ -33,7 +33,7 @@ public class UserController {
         List<User> users = userService.getUsers();
         log.info("Получен список пользователей длиной {}", users.size());
         return users.stream()
-                .map(mapper::UserToUserDto)
+                .map(mapper::userToUserDto)
                 .collect(Collectors.toList());
     }
 
@@ -42,7 +42,7 @@ public class UserController {
         log.info("Обработка запроса на получение пользователя с id = {}", userId);
         User user = userService.getUserById(userId);
         log.info("Получен пользователь с id = {}", user.getId());
-        return mapper.UserToUserDto(user);
+        return mapper.userToUserDto(user);
     }
 
     @PostMapping
@@ -50,7 +50,7 @@ public class UserController {
         log.info("Обработка запроса на создание пользователя");
         User createdUser = userService.createUser(user);
         log.info("Создан пользователь с id = {}", createdUser.getId());
-        return mapper.UserToUserDto(createdUser);
+        return mapper.userToUserDto(createdUser);
     }
 
     @PatchMapping("/{userId}")
@@ -58,7 +58,7 @@ public class UserController {
         log.info("Обработка запроса на частичное обновление пользователя с id = {}", userId);
         User updatedUser = userService.patchUser(userId, user);
         log.info("Обновлены параметры пользователя с id = {}", user.getId());
-        return mapper.UserToUserDto(updatedUser);
+        return mapper.userToUserDto(updatedUser);
     }
 
     @DeleteMapping("/{userId}")

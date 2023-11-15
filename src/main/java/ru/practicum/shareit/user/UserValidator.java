@@ -22,7 +22,7 @@ public class UserValidator {
             throw new UserValidateException("Имя не может быть пустым");
         }
 
-        if (user.getEmail() != null ) {
+        if (user.getEmail() != null) {
             if (user.getEmail().isBlank() || !user.getEmail().contains("@")) {
                 throw new UserValidateException("Некорректные данные почты");
             }

@@ -19,6 +19,7 @@ public class InMemoryItemRepository implements ItemRepository {
     private long increaseId() {
         return ++id;
     }
+
     @Override
     public Item createItem(Item item) {
         item.setId(increaseId());
