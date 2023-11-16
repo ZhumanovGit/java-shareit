@@ -2,10 +2,12 @@ package ru.practicum.shareit.item.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.practicum.shareit.exception.model.ItemNotFoundException;
-import ru.practicum.shareit.exception.model.ItemValidateException;
-import ru.practicum.shareit.exception.model.UserNotFoundException;
-import ru.practicum.shareit.item.ItemValidator;
+import ru.practicum.shareit.exception.model.NotFoundException;
+import ru.practicum.shareit.exception.model.ValidateException;
+import ru.practicum.shareit.item.ItemMapper;
+import ru.practicum.shareit.item.dto.CreatedItemDto;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.UpdateItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
@@ -23,31 +25,31 @@ class ItemServiceImplTest {
     ItemRepository itemRepository;
     UserRepository userRepository;
     ItemServiceImpl itemService;
+    ItemMapper mapper;
 
     @BeforeEach
     public void beforeEach() {
         itemRepository = mock(ItemRepository.class);
         userRepository = mock(UserRepository.class);
-        itemService = new ItemServiceImpl(itemRepository, userRepository, new ItemValidator());
+        mapper = new ItemMapper();
+        itemService = new ItemServiceImpl(itemRepository, userRepository, mapper);
     }
 
-    void assertEqualItem(Item o1, Item o2) {
+    void assertEqualItem(CreatedItemDto o1, CreatedItemDto o2) {
         assertEquals(o1.getId(), o2.getId());
         assertEquals(o1.getName(), o2.getName());
         assertEquals(o1.getDescription(), o2.getDescription());
-        assertEquals(o1.getAvailable(), o2.getAvailable());
-        assertEquals(o1.getOwner().getId(), o2.getOwner().getId());
     }
 
     @Test
     public void createItem_whenItemIsValid_thenReturnNewItem() {
         User owner = User.builder().id(1L).build();
-        Item item = Item.builder()
-                .id(1L)
+        ItemDto dto = ItemDto.builder()
                 .name("test")
                 .description("testDesc")
                 .available(true)
                 .build();
+        Item item = mapper.ItemDtoToItem(dto);
         Item expectedItem = Item.builder()
                 .id(1L)
                 .name("test")
@@ -58,30 +60,28 @@ class ItemServiceImplTest {
         when(userRepository.getUserById(owner.getId())).thenReturn(Optional.of(owner));
         when(itemRepository.createItem(item)).thenReturn(expectedItem);
 
-        Item actualItem = itemService.createItem(item, owner.getId());
+        CreatedItemDto actualItem = itemService.createItem(dto, owner.getId());
 
-        assertEqualItem(expectedItem, actualItem);
+        assertEqualItem(mapper.itemToCreatedItemDto(expectedItem), actualItem);
     }
 
     @Test
     public void createItem_whenItemIsntValid_thenThrowValidateException() {
         User owner = User.builder().id(1L).build();
-        Item item = Item.builder()
-                .id(1L)
+        ItemDto item = ItemDto.builder()
                 .description("testDesc")
                 .available(true)
                 .build();
-        String expectedResponse = "Имя объекта не может быть пустым";
+        String expectedResponse = "Название предмета не может быть пустым";
 
-        Throwable throwable = assertThrows(ItemValidateException.class, () -> itemService.createItem(item, owner.getId()));
+        Throwable throwable = assertThrows(ValidateException.class, () -> itemService.createItem(item, owner.getId()));
 
         assertEquals(expectedResponse, throwable.getMessage());
     }
 
     @Test
     public void createItem_whenOwnerIsNotFound_thenThrowUserNotFoundException() {
-        Item item = Item.builder()
-                .id(1L)
+        ItemDto item = ItemDto.builder()
                 .name("asd")
                 .description("testDesc")
                 .available(true)
@@ -89,22 +89,7 @@ class ItemServiceImplTest {
         String expectedResponse = "Пользователь с id = 5 не найден";
         when(userRepository.getUserById(5)).thenReturn(Optional.empty());
 
-        Throwable throwable = assertThrows(UserNotFoundException.class, () -> itemService.createItem(item, 5));
-
-        assertEquals(expectedResponse, throwable.getMessage());
-    }
-
-    @Test
-    public void createItem_whenOwnerIdIsNotCorrect_thenThrowItemValidateException() {
-        Item item = Item.builder()
-                .id(1L)
-                .name("asd")
-                .description("testDesc")
-                .available(true)
-                .build();
-        String expectedResponse = "Id владельца не может быть отрицательным";
-
-        Throwable throwable = assertThrows(ItemValidateException.class, () -> itemService.createItem(item, -5));
+        Throwable throwable = assertThrows(NotFoundException.class, () -> itemService.createItem(item, 5));
 
         assertEquals(expectedResponse, throwable.getMessage());
     }
@@ -119,10 +104,10 @@ class ItemServiceImplTest {
                 .available(true)
                 .owner(owner)
                 .build();
-        Item itemUpdates = Item.builder().id(1L).name("newTest").description("new desc").available(false).build();
-        when(itemRepository.getItemById(1L)).thenReturn(Optional.of(item));
+        UpdateItemDto itemUpdates = UpdateItemDto.builder().name("newTest").description("new desc").available(false).build();
+        when(itemRepository.getItemById(item.getId())).thenReturn(Optional.of(item));
 
-        Item updatedItem = itemService.patchItem(itemUpdates, item.getId(), owner.getId());
+        CreatedItemDto updatedItem = itemService.patchItem(itemUpdates, item.getId(), owner.getId());
 
         assertEquals(item.getId(), updatedItem.getId());
         assertEquals(itemUpdates.getName(), updatedItem.getName());
@@ -140,10 +125,10 @@ class ItemServiceImplTest {
                 .available(true)
                 .owner(owner)
                 .build();
-        Item itemUpdates = Item.builder().id(1L).name("").description("new desc").available(false).build();
+        UpdateItemDto itemUpdates = UpdateItemDto.builder().description("new desc").available(false).build();
         String expectedResponse = "Имя объекта не может быть пустым";
 
-        Throwable throwable = assertThrows(ItemValidateException.class, () -> itemService.patchItem(itemUpdates, item.getId(), owner.getId()));
+        Throwable throwable = assertThrows(ValidateException.class, () -> itemService.patchItem(itemUpdates, item.getId(), owner.getId()));
 
         assertEquals(expectedResponse, throwable.getMessage());
     }
@@ -152,30 +137,11 @@ class ItemServiceImplTest {
     public void patchItem_whenItemWasNotFound_thenThrowNotFoundException() {
         User owner = User.builder().id(1L).build();
 
-        Item itemUpdates = Item.builder().id(2L).name("asdasd").description("new desc").available(false).build();
-        when(itemRepository.getItemById(itemUpdates.getId())).thenReturn(Optional.empty());
-        String expectedResponse = "Объект с id = " + itemUpdates.getId() + " не найден";
+        UpdateItemDto itemUpdates = UpdateItemDto.builder().name("asdasd").description("new desc").available(false).build();
+        when(itemRepository.getItemById(2L)).thenReturn(Optional.empty());
+        String expectedResponse = "Объект с id = " + 2L + " не найден";
 
-        Throwable throwable = assertThrows(ItemNotFoundException.class, () -> itemService.patchItem(itemUpdates, itemUpdates.getId(), owner.getId()));
-
-        assertEquals(expectedResponse, throwable.getMessage());
-    }
-
-    @Test
-    public void patchItem_whenOwnerIdNotCorrect_thenThrowValidateException() {
-        User owner = User.builder().id(1L).build();
-        Item item = Item.builder()
-                .id(1L)
-                .name("asd")
-                .description("testDesc")
-                .available(true)
-                .owner(owner)
-                .build();
-        Item itemUpdates = Item.builder().id(1L).name("asdasd").description("new desc").available(false).build();
-        when(itemRepository.getItemById(1L)).thenReturn(Optional.of(item));
-        String expectedResponse = "Id владельца не может быть отрицательным";
-
-        Throwable throwable = assertThrows(ItemValidateException.class, () -> itemService.patchItem(itemUpdates, itemUpdates.getId(), -5L));
+        Throwable throwable = assertThrows(NotFoundException.class, () -> itemService.patchItem(itemUpdates, 2L, owner.getId()));
 
         assertEquals(expectedResponse, throwable.getMessage());
     }
@@ -190,11 +156,11 @@ class ItemServiceImplTest {
                 .available(true)
                 .owner(owner)
                 .build();
-        Item itemUpdates = Item.builder().id(1L).name("asdasd").description("new desc").available(false).build();
+        UpdateItemDto itemUpdates = UpdateItemDto.builder().name("asdasd").description("new desc").available(false).build();
         when(itemRepository.getItemById(1L)).thenReturn(Optional.of(item));
         String expectedResponse = "Не найден данный объект у данного пользователя";
 
-        Throwable throwable = assertThrows(ItemNotFoundException.class, () -> itemService.patchItem(itemUpdates, itemUpdates.getId(), 35));
+        Throwable throwable = assertThrows(NotFoundException.class, () -> itemService.patchItem(itemUpdates, item.getId(), 35));
 
         assertEquals(expectedResponse, throwable.getMessage());
     }
@@ -211,42 +177,16 @@ class ItemServiceImplTest {
                 .build();
         when(itemRepository.getItemById(item.getId())).thenReturn(Optional.of(item));
 
-        Item actualItem = itemService.getItemById(item.getId());
+        CreatedItemDto actualItem = itemService.getItemById(item.getId());
 
-        assertEqualItem(item, actualItem);
-    }
-
-    @Test
-    public void getItemById_whenIdNotCorrect_thenThrowValidateException() {
-        User owner = User.builder().id(1L).build();
-        Item item = Item.builder()
-                .id(1L)
-                .name("asd")
-                .description("testDesc")
-                .available(true)
-                .owner(owner)
-                .build();
-        String expectedResponse = "id объекта не может быть отрицательным";
-
-        Throwable throwable = assertThrows(ItemValidateException.class, () -> itemService.getItemById(-5L));
-
-        assertEquals(expectedResponse, throwable.getMessage());
+        assertEqualItem(mapper.itemToCreatedItemDto(item), actualItem);
     }
 
     @Test
     public void getItemById_whenItemNotFound_thenReturnItemNotFoundException() {
         String expectedResponse = "объект с id = 3 не найден";
 
-        Throwable throwable = assertThrows(ItemNotFoundException.class, () -> itemService.getItemById(3L));
-
-        assertEquals(expectedResponse, throwable.getMessage());
-    }
-
-    @Test
-    public void getItemsByOwnerId_whenOwnerIdNotCorrect_thenThrowItemValidateException() {
-        String expectedResponse = "id владельца не может быть отрицательным";
-
-        Throwable throwable = assertThrows(ItemValidateException.class, () -> itemService.getItemsByOwnerId(-1L));
+        Throwable throwable = assertThrows(NotFoundException.class, () -> itemService.getItemById(3L));
 
         assertEquals(expectedResponse, throwable.getMessage());
     }
@@ -256,7 +196,7 @@ class ItemServiceImplTest {
         String expectedResponse = "Пользователь с id = 5 не найден";
         when(userRepository.getUserById(5)).thenReturn(Optional.empty());
 
-        Throwable throwable = assertThrows(UserNotFoundException.class, () -> itemService.getItemsByOwnerId(5L));
+        Throwable throwable = assertThrows(NotFoundException.class, () -> itemService.getItemsByOwnerId(5L));
 
         assertEquals(expectedResponse, throwable.getMessage());
     }
@@ -288,14 +228,14 @@ class ItemServiceImplTest {
         when(userRepository.getUserById(owner.getId())).thenReturn(Optional.of(owner));
         when(itemRepository.getItemsByOwnerId(owner.getId())).thenReturn(List.of(item1, item2, item3));
 
-        List<Item> items = itemService.getItemsByOwnerId(owner.getId());
+        List<CreatedItemDto> items = itemService.getItemsByOwnerId(owner.getId());
 
         assertEquals(3, items.size());
     }
 
     @Test
     public void getItemsByNameOrDesc_whenStringIsBlank_thenReturnEmptyList() {
-        List<Item> items = itemService.getItemsByNameOrDesc("");
+        List<CreatedItemDto> items = itemService.getItemsByNameOrDesc("");
 
         assertEquals(0, items.size());
     }
@@ -326,7 +266,7 @@ class ItemServiceImplTest {
                 .build();
         when(itemRepository.getItemsByNameOrDesc("tes")).thenReturn(List.of(item1, item2, item3));
 
-        List<Item> items = itemService.getItemsByNameOrDesc("tEs");
+        List<CreatedItemDto> items = itemService.getItemsByNameOrDesc("tEs");
 
         assertEquals(3, items.size());
     }

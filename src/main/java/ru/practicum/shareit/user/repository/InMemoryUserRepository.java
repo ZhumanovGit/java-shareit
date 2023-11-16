@@ -1,8 +1,11 @@
 package ru.practicum.shareit.user.repository;
 
 import org.springframework.stereotype.Repository;
+import ru.practicum.shareit.exception.model.UserEmailIsAlreadyExists;
+import ru.practicum.shareit.exception.model.ValidateException;
 import ru.practicum.shareit.user.User;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +16,6 @@ import java.util.Optional;
 public class InMemoryUserRepository implements UserRepository {
     private final Map<Long, User> users = new HashMap<>();
     private final Map<Long, String> emails = new HashMap<>();
-
     private static long id;
 
     private long increaseId() {
@@ -22,6 +24,9 @@ public class InMemoryUserRepository implements UserRepository {
 
     @Override
     public User createUser(User user) {
+        if (isEmailBooked(user)) {
+            throw new UserEmailIsAlreadyExists("Данная почта уже занята");
+        }
         user.setId(increaseId());
         long userId = user.getId();
         users.put(userId, user);
@@ -30,7 +35,10 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     @Override
-    public void updateUser(User user) {
+    public void updateUser(@Valid User user) {
+        if (isEmailBooked(user)) {
+            throw new UserEmailIsAlreadyExists("Данная почта уже занята");
+        }
         long userId = user.getId();
         emails.put(userId, user.getEmail());
         users.put(userId, user);
@@ -60,8 +68,7 @@ public class InMemoryUserRepository implements UserRepository {
         users.clear();
     }
 
-    @Override
-    public boolean isEmailBooked(User user) {
+    private boolean isEmailBooked(User user) {
         String userEmail = user.getEmail();
         if (!emails.containsValue(userEmail)) {
             return false;

@@ -1,75 +1,65 @@
 package ru.practicum.shareit.user.service;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.model.UserEmailIsAlreadyExists;
-import ru.practicum.shareit.exception.model.UserNotFoundException;
-import ru.practicum.shareit.exception.model.UserValidateException;
+import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.UserValidator;
+import ru.practicum.shareit.user.UserMapper;
+import ru.practicum.shareit.user.dto.CreatedUserDto;
+import ru.practicum.shareit.user.dto.UpdateUserDto;
+import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
-    private final UserValidator validator;
+    private final UserMapper mapper;
+
 
     @Override
-    public User createUser(User user) {
-        validator.validateUserForCreate(user);
-
-        if (userRepository.isEmailBooked(user)) {
-            throw new UserEmailIsAlreadyExists("Пользователь с данной почтой уже зарегистрирован в системе");
-        }
-
-        return userRepository.createUser(user);
+    public CreatedUserDto createUser(@Valid UserDto userDto) {
+        User user = mapper.userDtoToUser(userDto);
+        User createdUser = userRepository.createUser(user);
+        return mapper.userToCreatedUserDto(createdUser);
     }
 
     @Override
-    public User patchUser(long userId, User userUpdates) {
-
-        validator.validateUserForUpdate(userUpdates);
+    public CreatedUserDto patchUser(long userId, @Valid @NonNull UpdateUserDto userUpdates) {
 
         User user = userRepository.getUserById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователя с id = " + userId + " не существует"));
-        String newName = userUpdates.getName();
-        if (newName != null) {
-            user.setName(newName);
-        }
+                .orElseThrow(() -> new NotFoundException("Пользователя с id = " + userId + " не существует"));
+        Optional<String> newName = Optional.ofNullable(userUpdates.getName());
+        user.setName(newName.orElse(user.getName()));
 
-        String newEmail = userUpdates.getEmail();
-        if (newEmail != null) {
-            if (!newEmail.equals(user.getEmail())) {
-                if (userRepository.isEmailBooked(userUpdates)) {
-                    throw new UserEmailIsAlreadyExists("Пользователь с данной почтой уже зарегистрирован в системе");
-                }
-                user.setEmail(newEmail);
-            }
-        }
+        Optional<String> newEmail = Optional.ofNullable(userUpdates.getEmail());
+        user.setEmail(newEmail.orElse(user.getEmail()));
 
         userRepository.updateUser(user);
-        return user;
+        return mapper.userToCreatedUserDto(user);
 
     }
 
     @Override
-    public User getUserById(long id) {
-        if (id < 0) {
-            throw new UserValidateException("id пользователя не может быть отрицательным");
-        }
-
-        return userRepository.getUserById(id)
-                .orElseThrow(() -> new UserNotFoundException("Пользователя с id = " + id + " не существует"));
+    public CreatedUserDto getUserById(long id) {
+        User user = userRepository.getUserById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователя с id = " + id + " не существует"));
+        return mapper.userToCreatedUserDto(user);
     }
 
     @Override
-    public List<User> getUsers() {
-        return userRepository.getUsers();
+    public List<CreatedUserDto> getUsers() {
+        return userRepository.getUsers().stream()
+                .map(mapper::userToCreatedUserDto)
+                .collect(Collectors.toList());
     }
 
     @Override

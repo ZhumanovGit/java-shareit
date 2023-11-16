@@ -1,109 +1,98 @@
 package ru.practicum.shareit.item.service;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.model.ItemNotFoundException;
-import ru.practicum.shareit.exception.model.ItemValidateException;
-import ru.practicum.shareit.exception.model.UserNotFoundException;
+import ru.practicum.shareit.exception.model.NotFoundException;
+import ru.practicum.shareit.exception.model.ValidateException;
+import ru.practicum.shareit.item.ItemMapper;
 import ru.practicum.shareit.item.ItemValidator;
+import ru.practicum.shareit.item.dto.CreatedItemDto;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.UpdateItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
-    private final ItemValidator itemValidator;
+    private final ItemMapper mapper;
 
     @Override
-    public Item createItem(Item item, long ownerId) {
-        itemValidator.validateItemForCreate(item);
-
-        if (ownerId < 0) {
-            throw new ItemValidateException("Id владельца не может быть отрицательным");
-        }
+    public CreatedItemDto createItem(@Valid ItemDto dto, long ownerId) {
 
         User owner = userRepository.getUserById(ownerId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id = " + ownerId + " не найден"));
-        ;
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
+
+        Item item = mapper.ItemDtoToItem(dto);
         item.setOwner(owner);
 
-        return itemRepository.createItem(item);
+        return mapper.itemToCreatedItemDto(itemRepository.createItem(item));
     }
 
     @Override
-    public Item patchItem(Item itemUpdates, long itemId, long ownerId) {
-        itemValidator.validateItemForUpdate(itemUpdates);
+    public CreatedItemDto patchItem(@NonNull UpdateItemDto itemUpdates, long itemId, long ownerId) {
         Item item = itemRepository.getItemById(itemId)
-                .orElseThrow(() -> new ItemNotFoundException("Объект с id = " + itemId + " не найден"));
-
-        if (ownerId < 0) {
-            throw new ItemValidateException("Id владельца не может быть отрицательным");
-        }
+                .orElseThrow(() -> new NotFoundException("Объект с id = " + itemId + " не найден"));
 
         if (item.getOwner().getId() != ownerId) {
-            throw new ItemNotFoundException("Не найден данный объект у данного пользователя");
+            throw new NotFoundException("Не найден данный объект у данного пользователя");
         }
+        Optional<String> newName = Optional.ofNullable(itemUpdates.getName());
+        item.setName(newName.orElse(item.getName()));
 
-        String newName = itemUpdates.getName();
-        if (newName != null) {
-            item.setName(newName);
-        }
+        Optional<String> newDescription = Optional.ofNullable(itemUpdates.getDescription());
+        item.setDescription(newDescription.orElse(item.getDescription()));
 
-        String newDescription = itemUpdates.getDescription();
-        if (newDescription != null) {
-            item.setDescription(newDescription);
-        }
-
-        Boolean newStatus = itemUpdates.getAvailable();
-        if (newStatus != null) {
-            item.setAvailable(newStatus);
-        }
+        Optional<Boolean> newStatus = Optional.ofNullable(itemUpdates.getAvailable());
+        item.setAvailable(newStatus.orElse(item.getAvailable()));
 
         itemRepository.updateItem(item);
-        return item;
+        return mapper.itemToCreatedItemDto(item);
 
     }
 
     @Override
-    public Item getItemById(long id) {
-        if (id < 0) {
-            throw new ItemValidateException("id объекта не может быть отрицательным");
-        }
-        return itemRepository.getItemById(id)
-                .orElseThrow(() -> new ItemNotFoundException("объект с id = " + id + " не найден"));
+    public CreatedItemDto getItemById(long id) {
+        Item item = itemRepository.getItemById(id)
+                .orElseThrow(() -> new NotFoundException("объект с id = " + id + " не найден"));
+        return mapper.itemToCreatedItemDto(item);
     }
 
     @Override
-    public List<Item> getItems() {
-        return itemRepository.getItems();
-    }
-
-    @Override
-    public List<Item> getItemsByOwnerId(long ownerId) {
-        if (ownerId < 0) {
-            throw new ItemValidateException("id владельца не может быть отрицательным");
-        }
+    public List<CreatedItemDto> getItemsByOwnerId(long ownerId) {
 
         userRepository.getUserById(ownerId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id = " + ownerId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
 
-        return itemRepository.getItemsByOwnerId(ownerId);
+        List<Item> items = itemRepository.getItemsByOwnerId(ownerId);
+
+        return items.stream()
+                .map(mapper::itemToCreatedItemDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Item> getItemsByNameOrDesc(String substring) {
+    public List<CreatedItemDto> getItemsByNameOrDesc(String substring) {
         if (substring.isBlank()) {
             return new ArrayList<>();
         }
         String needSubstring = substring.toLowerCase();
-        return itemRepository.getItemsByNameOrDesc(needSubstring);
+
+        List<Item> items = itemRepository.getItemsByNameOrDesc(needSubstring);
+        return items.stream()
+                .map(mapper::itemToCreatedItemDto)
+                .collect(Collectors.toList());
     }
 
 

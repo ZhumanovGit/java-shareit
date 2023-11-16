@@ -3,6 +3,7 @@ package ru.practicum.shareit.item.repository;
 import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.item.model.Item;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +29,7 @@ public class InMemoryItemRepository implements ItemRepository {
     }
 
     @Override
-    public void updateItem(Item item) {
+    public void updateItem(@Valid Item item) {
         items.put(item.getId(), item);
     }
 

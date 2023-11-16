@@ -10,11 +10,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.shareit.user.dto.CreatedUserDto;
+import ru.practicum.shareit.user.dto.UpdateUserDto;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.service.UserService;
 
+import javax.validation.constraints.Positive;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * TODO Sprint add-controllers.
@@ -25,44 +27,41 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserController {
     private final UserService userService;
-    private final UserMapper mapper;
 
     @GetMapping
-    public List<UserDto> getUsers() {
+    public List<CreatedUserDto> getUsers() {
         log.info("Обработка запроса на получение всех пользователей");
-        List<User> users = userService.getUsers();
+        List<CreatedUserDto> users = userService.getUsers();
         log.info("Получен список пользователей длиной {}", users.size());
-        return users.stream()
-                .map(mapper::userToUserDto)
-                .collect(Collectors.toList());
+        return users;
     }
 
     @GetMapping("/{userId}")
-    public UserDto getUser(@PathVariable Long userId) {
+    public CreatedUserDto getUser(@PathVariable @Positive long userId) {
         log.info("Обработка запроса на получение пользователя с id = {}", userId);
-        User user = userService.getUserById(userId);
+        CreatedUserDto user = userService.getUserById(userId);
         log.info("Получен пользователь с id = {}", user.getId());
-        return mapper.userToUserDto(user);
+        return user;
     }
 
     @PostMapping
-    public UserDto createUser(@RequestBody User user) {
+    public CreatedUserDto createUser(@RequestBody UserDto dto) {
         log.info("Обработка запроса на создание пользователя");
-        User createdUser = userService.createUser(user);
+        CreatedUserDto createdUser = userService.createUser(dto);
         log.info("Создан пользователь с id = {}", createdUser.getId());
-        return mapper.userToUserDto(createdUser);
+        return createdUser;
     }
 
     @PatchMapping("/{userId}")
-    public UserDto patchUser(@PathVariable Long userId, @RequestBody User user) {
+    public CreatedUserDto patchUser(@PathVariable @Positive long userId, @RequestBody UpdateUserDto dto) {
         log.info("Обработка запроса на частичное обновление пользователя с id = {}", userId);
-        User updatedUser = userService.patchUser(userId, user);
-        log.info("Обновлены параметры пользователя с id = {}", user.getId());
-        return mapper.userToUserDto(updatedUser);
+        CreatedUserDto updatedUser = userService.patchUser(userId, dto);
+        log.info("Обновлены параметры пользователя с id = {}", updatedUser.getId());
+        return updatedUser;
     }
 
     @DeleteMapping("/{userId}")
-    public void deleteUserById(@PathVariable Long userId) {
+    public void deleteUserById(@PathVariable @Positive long userId) {
         log.info("Обработка запроса на удаление пользователя с id = {}", userId);
         userService.deleteUserById(userId);
         log.info("Пользователь с id = {} удален", userId);

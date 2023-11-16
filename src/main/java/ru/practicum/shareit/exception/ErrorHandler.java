@@ -6,11 +6,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.shareit.exception.model.ExceptionResponse;
-import ru.practicum.shareit.exception.model.ItemNotFoundException;
-import ru.practicum.shareit.exception.model.ItemValidateException;
+import ru.practicum.shareit.exception.model.NotFoundException;
+import ru.practicum.shareit.exception.model.ValidateException;
 import ru.practicum.shareit.exception.model.UserEmailIsAlreadyExists;
-import ru.practicum.shareit.exception.model.UserNotFoundException;
-import ru.practicum.shareit.exception.model.UserValidateException;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -18,31 +16,17 @@ import java.io.StringWriter;
 @Slf4j
 @RestControllerAdvice(basePackages = "ru.practicum.shareit")
 public class ErrorHandler {
-    @ExceptionHandler(ItemValidateException.class)
+    @ExceptionHandler(ValidateException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ExceptionResponse handleItemValidateException(final ItemValidateException e) {
-        log.warn("ItemValidateException, {}", e.getMessage());
+    public ExceptionResponse handleValidateException(final ValidateException e) {
+        log.warn("ValidateException, {}", e.getMessage());
         return new ExceptionResponse(e.getMessage());
     }
 
-    @ExceptionHandler(UserValidateException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ExceptionResponse handleUserValidateException(final UserValidateException e) {
-        log.warn("UserValidateException, {}", e.getMessage());
-        return new ExceptionResponse(e.getMessage());
-    }
-
-    @ExceptionHandler(ItemNotFoundException.class)
+    @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ExceptionResponse handleItemNotFoundException(final ItemNotFoundException e) {
-        log.warn("ItemNotFoundException, {}", e.getMessage());
-        return new ExceptionResponse(e.getMessage());
-    }
-
-    @ExceptionHandler(UserNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ExceptionResponse handleUserNotFoundException(final UserNotFoundException e) {
-        log.warn("UserNotFoundException, {}", e.getMessage());
+    public ExceptionResponse handleNotFoundException(final NotFoundException e) {
+        log.warn("NotFoundException, {}", e.getMessage());
         return new ExceptionResponse(e.getMessage());
     }
 
