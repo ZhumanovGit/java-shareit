@@ -1,6 +1,5 @@
 package ru.practicum.shareit.user.service;
 
-import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dto.CreatedUserDto;
 import ru.practicum.shareit.user.dto.UpdateUserDto;
 import ru.practicum.shareit.user.dto.UserDto;

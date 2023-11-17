@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.shareit.exception.model.ExceptionResponse;
 import ru.practicum.shareit.exception.model.NotFoundException;
-import ru.practicum.shareit.exception.model.ValidateException;
 import ru.practicum.shareit.exception.model.UserEmailIsAlreadyExists;
 
 import javax.validation.ConstraintViolationException;
