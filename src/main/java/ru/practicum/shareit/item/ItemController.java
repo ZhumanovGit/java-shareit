@@ -18,6 +18,7 @@ import ru.practicum.shareit.item.dto.UpdateItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import java.util.List;
 
@@ -56,7 +57,7 @@ public class ItemController {
     }
 
     @PostMapping
-    public CreatedItemDto createItem(@RequestHeader("X-Sharer-User-Id") @Positive long ownerId, @RequestBody ItemDto item) {
+    public CreatedItemDto createItem(@RequestHeader("X-Sharer-User-Id") @Positive long ownerId, @Valid @RequestBody ItemDto item) {
         log.info("Обработка запроса на создание новой вещи пользователем с id = {}", ownerId);
         CreatedItemDto dto = itemService.createItem(item, ownerId);
         log.info("создана новая вешь с id = {}", dto.getId());

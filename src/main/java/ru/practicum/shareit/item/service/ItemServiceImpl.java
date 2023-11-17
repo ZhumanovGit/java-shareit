@@ -1,12 +1,10 @@
 package ru.practicum.shareit.item.service;
 
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.model.NotFoundException;
-import ru.practicum.shareit.exception.model.ValidateException;
 import ru.practicum.shareit.item.ItemMapper;
-import ru.practicum.shareit.item.ItemValidator;
 import ru.practicum.shareit.item.dto.CreatedItemDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.UpdateItemDto;
@@ -16,6 +14,7 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -29,15 +28,15 @@ public class ItemServiceImpl implements ItemService {
     private final ItemMapper mapper;
 
     @Override
-    public CreatedItemDto createItem(@Valid ItemDto dto, long ownerId) {
+    public CreatedItemDto createItem(ItemDto dto, long ownerId) {
 
         User owner = userRepository.getUserById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
 
         Item item = mapper.ItemDtoToItem(dto);
         item.setOwner(owner);
-
-        return mapper.itemToCreatedItemDto(itemRepository.createItem(item));
+        Item createdItem = itemRepository.createItem(item);
+        return mapper.itemToCreatedItemDto(createdItem);
     }
 
     @Override

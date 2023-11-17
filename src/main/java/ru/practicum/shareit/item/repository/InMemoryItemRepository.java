@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.repository;
 
 import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.User;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 @Repository
 public class InMemoryItemRepository implements ItemRepository {
     private final Map<Long, Item> items = new HashMap<>();
+    private final Map<Long, List<Item>> itemsWithOwners = new HashMap<>();
 
     private static long id;
 
@@ -25,12 +27,25 @@ public class InMemoryItemRepository implements ItemRepository {
     public Item createItem(Item item) {
         item.setId(increaseId());
         items.put(item.getId(), item);
+        Long ownerId = item.getOwner().getId();
+        List<Item> ownerItems = new ArrayList<>(itemsWithOwners.get(ownerId));
+        ownerItems.add(item);
+        itemsWithOwners.put(ownerId, ownerItems);
         return item;
     }
 
     @Override
-    public void updateItem(@Valid Item item) {
-        items.put(item.getId(), item);
+    public void updateItem(Item item) {
+        Long itemId = item.getId();
+        Item oldItem = items.get(itemId);
+        items.put(itemId, item);
+        Long ownerId = item.getOwner().getId();
+        List<Item> ownerItems = new ArrayList<>(itemsWithOwners.get(ownerId));
+        ownerItems.remove(oldItem);
+        ownerItems.add(item);
+        itemsWithOwners.put(ownerId, ownerItems);
+
+
     }
 
     @Override
@@ -45,9 +60,7 @@ public class InMemoryItemRepository implements ItemRepository {
 
     @Override
     public List<Item> getItemsByOwnerId(long ownerId) {
-        return items.values().stream()
-                .filter(item -> item.getOwner().getId() == ownerId)
-                .collect(Collectors.toList());
+        return itemsWithOwners.get(ownerId);
     }
 
     @Override

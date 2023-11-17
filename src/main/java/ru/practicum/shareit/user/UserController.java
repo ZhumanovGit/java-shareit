@@ -15,6 +15,7 @@ import ru.practicum.shareit.user.dto.UpdateUserDto;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.service.UserService;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import java.util.List;
 
@@ -45,7 +46,7 @@ public class UserController {
     }
 
     @PostMapping
-    public CreatedUserDto createUser(@RequestBody UserDto dto) {
+    public CreatedUserDto createUser(@RequestBody @Valid UserDto dto) {
         log.info("Обработка запроса на создание пользователя");
         CreatedUserDto createdUser = userService.createUser(dto);
         log.info("Создан пользователь с id = {}", createdUser.getId());

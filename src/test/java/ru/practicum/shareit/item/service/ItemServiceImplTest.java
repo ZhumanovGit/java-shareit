@@ -3,7 +3,6 @@ package ru.practicum.shareit.item.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.practicum.shareit.exception.model.NotFoundException;
-import ru.practicum.shareit.exception.model.ValidateException;
 import ru.practicum.shareit.item.ItemMapper;
 import ru.practicum.shareit.item.dto.CreatedItemDto;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -18,6 +17,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -43,40 +44,29 @@ class ItemServiceImplTest {
 
     @Test
     public void createItem_whenItemIsValid_thenReturnNewItem() {
-        User owner = User.builder().id(1L).build();
+        User expectedUser = User.builder()
+                .id(1L)
+                .name("name")
+                .email("name@e.mail")
+                .build();
         ItemDto dto = ItemDto.builder()
-                .name("test")
-                .description("testDesc")
+                .name("name")
+                .description("description")
                 .available(true)
                 .build();
         Item item = mapper.ItemDtoToItem(dto);
         Item expectedItem = Item.builder()
                 .id(1L)
-                .name("test")
-                .description("testDesc")
-                .available(true)
-                .owner(owner)
-                .build();
-        when(userRepository.getUserById(owner.getId())).thenReturn(Optional.of(owner));
-        when(itemRepository.createItem(item)).thenReturn(expectedItem);
-
-        CreatedItemDto actualItem = itemService.createItem(dto, owner.getId());
-
-        assertEqualItem(mapper.itemToCreatedItemDto(expectedItem), actualItem);
-    }
-
-    @Test
-    public void createItem_whenItemIsntValid_thenThrowValidateException() {
-        User owner = User.builder().id(1L).build();
-        ItemDto item = ItemDto.builder()
-                .description("testDesc")
+                .name("name")
+                .description("description")
                 .available(true)
                 .build();
-        String expectedResponse = "Название предмета не может быть пустым";
+        when(userRepository.getUserById(anyLong())).thenReturn(Optional.of(expectedUser));
+        when(itemRepository.createItem(any())).thenReturn(expectedItem);
 
-        Throwable throwable = assertThrows(ValidateException.class, () -> itemService.createItem(item, owner.getId()));
+        CreatedItemDto actual = itemService.createItem(dto, expectedUser.getId());
 
-        assertEquals(expectedResponse, throwable.getMessage());
+        assertEqualItem(mapper.itemToCreatedItemDto(expectedItem), actual);
     }
 
     @Test
@@ -126,9 +116,9 @@ class ItemServiceImplTest {
                 .owner(owner)
                 .build();
         UpdateItemDto itemUpdates = UpdateItemDto.builder().description("new desc").available(false).build();
-        String expectedResponse = "Имя объекта не может быть пустым";
+        String expectedResponse = "Объект с id = 1 не найден";
 
-        Throwable throwable = assertThrows(ValidateException.class, () -> itemService.patchItem(itemUpdates, item.getId(), owner.getId()));
+        Throwable throwable = assertThrows(NotFoundException.class, () -> itemService.patchItem(itemUpdates, item.getId(), owner.getId()));
 
         assertEquals(expectedResponse, throwable.getMessage());
     }

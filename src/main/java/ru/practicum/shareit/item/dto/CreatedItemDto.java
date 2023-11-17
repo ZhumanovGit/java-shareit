@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NonNull;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 
@@ -16,13 +17,13 @@ import javax.validation.constraints.Size;
 @Builder
 public class CreatedItemDto {
     @Positive
-    @NonNull
+    @NotNull
     private Long id;
     @NotBlank(message = "Название предмета не может быть пустым")
     private String name;
     @NotBlank(message = "Описание не может быть пустым")
     @Size(min = 1, max = 200)
     private String description;
-    @NonNull
+    @NotNull
     private Boolean available;
 }

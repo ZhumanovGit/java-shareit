@@ -10,16 +10,24 @@ import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.exception.model.ValidateException;
 import ru.practicum.shareit.exception.model.UserEmailIsAlreadyExists;
 
+import javax.validation.ConstraintViolationException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice(basePackages = "ru.practicum.shareit")
 public class ErrorHandler {
-    @ExceptionHandler(ValidateException.class)
+    @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ExceptionResponse handleValidateException(final ValidateException e) {
-        log.warn("ValidateException, {}", e.getMessage());
+    public ExceptionResponse handleValidateException(final ConstraintViolationException e) {
+        Map<String, String> errors = e.getConstraintViolations()
+                .stream()
+                .collect(Collectors.toMap(
+                        f -> f.getPropertyPath().toString(),
+                        f -> f.getMessage() != null ? f.getMessage() : ""));
+        log.warn("ConstraintViolationExceptions, {}", errors.values());
         return new ExceptionResponse(e.getMessage());
     }
 

@@ -1,7 +1,7 @@
 package ru.practicum.shareit.user.service;
 
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -26,14 +26,14 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public CreatedUserDto createUser(@Valid UserDto userDto) {
+    public CreatedUserDto createUser(UserDto userDto) {
         User user = mapper.userDtoToUser(userDto);
         User createdUser = userRepository.createUser(user);
         return mapper.userToCreatedUserDto(createdUser);
     }
 
     @Override
-    public CreatedUserDto patchUser(long userId, @Valid @NonNull UpdateUserDto userUpdates) {
+    public CreatedUserDto patchUser(long userId, @NonNull UpdateUserDto userUpdates) {
 
         User user = userRepository.getUserById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователя с id = " + userId + " не существует"));
@@ -44,7 +44,9 @@ public class UserServiceImpl implements UserService {
         user.setEmail(newEmail.orElse(user.getEmail()));
 
         userRepository.updateUser(user);
-        return mapper.userToCreatedUserDto(user);
+        User updatedUser = userRepository.getUserById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователя с id = " + userId + " не существует"));
+        return mapper.userToCreatedUserDto(updatedUser);
 
     }
 

@@ -49,7 +49,11 @@ class UserServiceImplTest {
                 .email("testEmail@ya.com")
                 .build();
         User user = mapper.userDtoToUser(dto);
-        CreatedUserDto expectedUser = mapper.userToCreatedUserDto(user);
+        CreatedUserDto expectedUser = CreatedUserDto.builder()
+                .id(1L)
+                .name("test")
+                .email("testEmail@ya.com")
+                .build();
         when(userRepository.createUser(user)).thenReturn(User.builder()
                 .id(1L)
                 .name(user.getName())
@@ -59,18 +63,6 @@ class UserServiceImplTest {
         CreatedUserDto actualUser = service.createUser(dto);
 
         assertEqualsUser(expectedUser, actualUser);
-    }
-
-    @Test
-    public void createUser_whenUserInCorrect_thenThrowValidationError() {
-        UserDto dto = UserDto.builder()
-                .email("testEmail@ya.com")
-                .build();
-        String expectedResponse = "Имя не может быть пустым";
-
-        Throwable throwable = assertThrows(ValidateException.class, () -> service.createUser(dto));
-
-        assertEquals(expectedResponse, throwable.getMessage());
     }
 
     @Test
@@ -88,22 +80,6 @@ class UserServiceImplTest {
         assertEquals(user.getId(), updatedUser.getId());
         assertEquals(userUpdates.getName(), updatedUser.getName());
         assertEquals(userUpdates.getEmail(), updatedUser.getEmail());
-    }
-
-    @Test
-    public void patchUser_whenChangesArentCorrect_thenThrowValidateException() {
-        User user = User.builder()
-                .id(1L)
-                .name("test")
-                .email("testEmail@ya.com")
-                .build();
-        UpdateUserDto userUpdates = UpdateUserDto.builder().email("newEmail@ya.com").build();
-        when(userRepository.getUserById(1L)).thenReturn(Optional.of(user));
-        String expectedResponse = "Имя не может быть пустым";
-
-        Throwable throwable = assertThrows(ValidateException.class, () -> service.patchUser(user.getId(), userUpdates));
-
-        assertEquals(expectedResponse, throwable.getMessage());
     }
     @Test
     public void getUserById_whenUserWasFound_thenReturnUser() {

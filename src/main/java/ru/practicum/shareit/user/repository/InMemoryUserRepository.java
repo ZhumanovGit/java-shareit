@@ -35,18 +35,21 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     @Override
-    public void updateUser(@Valid User user) {
+    public void updateUser(User user) {
         if (isEmailBooked(user)) {
             throw new UserEmailIsAlreadyExists("Данная почта уже занята");
         }
         long userId = user.getId();
-        emails.put(userId, user.getEmail());
         users.put(userId, user);
+        emails.put(userId, user.getEmail());
     }
 
     @Override
     public Optional<User> getUserById(long id) {
-
+        User user = users.get(id);
+        if (user != null) {
+            user.setEmail(emails.get(id));
+        }
         return Optional.ofNullable(users.get(id));
     }
 

@@ -18,11 +18,7 @@ import javax.validation.constraints.Size;
 public class Item {
     private Long id;
     private User owner;
-    @NotBlank(message = "Название предмета не может быть пустым")
     private String name;
-    @NotBlank(message = "Описание не может быть пустым")
-    @Size(min = 1, max = 200)
     private String description;
-    @NonNull
     private Boolean available;
 }

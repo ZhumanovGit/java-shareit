@@ -7,6 +7,7 @@ import ru.practicum.shareit.user.User;
 
 import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @Data
@@ -18,6 +19,7 @@ public class ItemDto {
     @Size(min = 1, max = 200)
     private String description;
     @AssertTrue
+    @NotNull
     private Boolean available;
 
 }
