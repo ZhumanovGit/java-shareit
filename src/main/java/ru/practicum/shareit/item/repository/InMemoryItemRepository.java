@@ -26,7 +26,11 @@ public class InMemoryItemRepository implements ItemRepository {
         item.setId(increaseId());
         items.put(item.getId(), item);
         Long ownerId = item.getOwner().getId();
-        List<Item> ownerItems = new ArrayList<>(itemsWithOwners.get(ownerId));
+        List<Item> itemsForOwnerUpdate = itemsWithOwners.get(ownerId);
+        if (itemsForOwnerUpdate == null) {
+            itemsForOwnerUpdate = new ArrayList<>();
+        }
+        List<Item> ownerItems = new ArrayList<>(itemsForOwnerUpdate);
         ownerItems.add(item);
         itemsWithOwners.put(ownerId, ownerItems);
         return item;
@@ -38,7 +42,11 @@ public class InMemoryItemRepository implements ItemRepository {
         Item oldItem = items.get(itemId);
         items.put(itemId, item);
         Long ownerId = item.getOwner().getId();
-        List<Item> ownerItems = new ArrayList<>(itemsWithOwners.get(ownerId));
+        List<Item> itemsForOwnerUpdate = itemsWithOwners.get(ownerId);
+        if (itemsForOwnerUpdate == null) {
+            itemsForOwnerUpdate = new ArrayList<>();
+        }
+        List<Item> ownerItems = new ArrayList<>(itemsForOwnerUpdate);
         ownerItems.remove(oldItem);
         ownerItems.add(item);
         itemsWithOwners.put(ownerId, ownerItems);
@@ -48,7 +56,7 @@ public class InMemoryItemRepository implements ItemRepository {
 
     @Override
     public Optional<Item> getItemById(long id) {
-        return Optional.of(items.get(id));
+        return Optional.ofNullable(items.get(id));
     }
 
     @Override
@@ -73,11 +81,7 @@ public class InMemoryItemRepository implements ItemRepository {
 
     @Override
     public void deleteAllItemsByOwnerId(long ownerId) {
-        List<Item> needItems = getItemsByOwnerId(ownerId);
-
-        for (Item i : needItems) {
-            items.put(i.getId(), null);
-        }
+        itemsWithOwners.remove(ownerId);
     }
 
     @Override
