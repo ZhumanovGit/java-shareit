@@ -3,7 +3,6 @@ package ru.practicum.shareit.user.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.practicum.shareit.exception.model.NotFoundException;
-import ru.practicum.shareit.exception.model.ValidateException;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserMapper;
@@ -81,6 +80,7 @@ class UserServiceImplTest {
         assertEquals(userUpdates.getName(), updatedUser.getName());
         assertEquals(userUpdates.getEmail(), updatedUser.getEmail());
     }
+
     @Test
     public void getUserById_whenUserWasFound_thenReturnUser() {
         User user = User.builder()

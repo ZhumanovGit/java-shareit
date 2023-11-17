@@ -54,7 +54,7 @@ class ItemServiceImplTest {
                 .description("description")
                 .available(true)
                 .build();
-        Item item = mapper.ItemDtoToItem(dto);
+        Item item = mapper.itemDtoToItem(dto);
         Item expectedItem = Item.builder()
                 .id(1L)
                 .name("name")

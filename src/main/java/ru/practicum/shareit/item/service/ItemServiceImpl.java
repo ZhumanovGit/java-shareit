@@ -31,7 +31,7 @@ public class ItemServiceImpl implements ItemService {
         User owner = userRepository.getUserById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
 
-        Item item = mapper.ItemDtoToItem(dto);
+        Item item = mapper.itemDtoToItem(dto);
         item.setOwner(owner);
         Item createdItem = itemRepository.createItem(item);
         return mapper.itemToCreatedItemDto(createdItem);
