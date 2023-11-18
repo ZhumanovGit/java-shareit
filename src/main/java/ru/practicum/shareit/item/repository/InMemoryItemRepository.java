@@ -5,15 +5,17 @@ import ru.practicum.shareit.item.model.Item;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Repository
 public class InMemoryItemRepository implements ItemRepository {
     private final Map<Long, Item> items = new HashMap<>();
-    private final Map<Long, List<Item>> itemsWithOwners = new HashMap<>();
+    private final Map<Long, Set<Item>> itemsWithOwners = new HashMap<>();
 
     private static long id;
 
@@ -26,11 +28,7 @@ public class InMemoryItemRepository implements ItemRepository {
         item.setId(increaseId());
         items.put(item.getId(), item);
         Long ownerId = item.getOwner().getId();
-        List<Item> itemsForOwnerUpdate = itemsWithOwners.get(ownerId);
-        if (itemsForOwnerUpdate == null) {
-            itemsForOwnerUpdate = new ArrayList<>();
-        }
-        List<Item> ownerItems = new ArrayList<>(itemsForOwnerUpdate);
+        Set<Item> ownerItems = itemsWithOwners.getOrDefault(ownerId, new HashSet<>());
         ownerItems.add(item);
         itemsWithOwners.put(ownerId, ownerItems);
         return item;
@@ -42,11 +40,7 @@ public class InMemoryItemRepository implements ItemRepository {
         Item oldItem = items.get(itemId);
         items.put(itemId, item);
         Long ownerId = item.getOwner().getId();
-        List<Item> itemsForOwnerUpdate = itemsWithOwners.get(ownerId);
-        if (itemsForOwnerUpdate == null) {
-            itemsForOwnerUpdate = new ArrayList<>();
-        }
-        List<Item> ownerItems = new ArrayList<>(itemsForOwnerUpdate);
+        Set<Item> ownerItems = itemsWithOwners.getOrDefault(ownerId, new HashSet<>());
         ownerItems.remove(oldItem);
         ownerItems.add(item);
         itemsWithOwners.put(ownerId, ownerItems);
@@ -66,7 +60,7 @@ public class InMemoryItemRepository implements ItemRepository {
 
     @Override
     public List<Item> getItemsByOwnerId(long ownerId) {
-        return itemsWithOwners.get(ownerId);
+        return new ArrayList<>(itemsWithOwners.get(ownerId));
     }
 
     @Override
@@ -81,16 +75,32 @@ public class InMemoryItemRepository implements ItemRepository {
 
     @Override
     public void deleteAllItemsByOwnerId(long ownerId) {
-        itemsWithOwners.remove(ownerId);
+        Set<Item> itemsForDelete = itemsWithOwners.remove(ownerId);
+        if (itemsForDelete != null) {
+            for (Item item : itemsForDelete) {
+                items.remove(item.getId());
+            }
+        }
     }
 
     @Override
     public void deleteItem(long id) {
-        items.put(id, null);
+        Item itemForDelete = items.remove(id);
+        if (itemForDelete == null) {
+            return;
+        }
+        long ownerId = itemForDelete.getOwner().getId();
+        Set<Item> ownerItems = itemsWithOwners.get(ownerId);
+        if (ownerItems.isEmpty()) {
+            return;
+        }
+        ownerItems.remove(itemForDelete);
+        itemsWithOwners.put(ownerId, ownerItems);
     }
 
     @Override
     public void deleteAllItems() {
+        itemsWithOwners.clear();
         items.clear();
     }
 }

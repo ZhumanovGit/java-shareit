@@ -6,14 +6,16 @@ import ru.practicum.shareit.user.User;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public class InMemoryUserRepository implements UserRepository {
     private final Map<Long, User> users = new HashMap<>();
-    private final Map<Long, String> emails = new HashMap<>();
+    private final Set<String> emails = new HashSet<>();
     private static long id;
 
     private long increaseId() {
@@ -22,32 +24,32 @@ public class InMemoryUserRepository implements UserRepository {
 
     @Override
     public User createUser(User user) {
-        if (isEmailBooked(user)) {
+        String userEmail = user.getEmail();
+        if (emails.contains(userEmail)) {
             throw new UserEmailIsAlreadyExists("Данная почта уже занята");
         }
         user.setId(increaseId());
         long userId = user.getId();
         users.put(userId, user);
-        emails.put(userId, user.getEmail());
+        emails.add(userEmail);
         return user;
     }
 
     @Override
     public void updateUser(User user) {
-        if (isEmailBooked(user)) {
+        long userId = user.getId();
+        String userEmail = user.getEmail();
+        String oldUserEmail = users.get(userId).getEmail();
+        if (!oldUserEmail.equals(userEmail) && (emails.contains(userEmail))) {
             throw new UserEmailIsAlreadyExists("Данная почта уже занята");
         }
-        long userId = user.getId();
+        emails.remove(oldUserEmail);
         users.put(userId, user);
-        emails.put(userId, user.getEmail());
+        emails.add(userEmail);
     }
 
     @Override
     public Optional<User> getUserById(long id) {
-        User user = users.get(id);
-        if (user != null) {
-            user.setEmail(emails.get(id));
-        }
         return Optional.ofNullable(users.get(id));
     }
 
@@ -58,31 +60,15 @@ public class InMemoryUserRepository implements UserRepository {
 
     @Override
     public void deleteUserById(long id) {
-        User user = users.get(id);
-        emails.remove(id);
-        users.remove(id);
+        User user = users.remove(id);
+        if (user != null) {
+            emails.remove(user.getEmail());
+        }
     }
 
     @Override
     public void deleteAllUsers() {
         emails.clear();
         users.clear();
-    }
-
-    private boolean isEmailBooked(User user) {
-        String userEmail = user.getEmail();
-        if (!emails.containsValue(userEmail)) {
-            return false;
-        }
-        Long userId = user.getId();
-        if (userId == null) {
-            return true;
-        }
-
-        if (emails.get(userId).equals(userEmail)) {
-            return false;
-        }
-
-        return true;
     }
 }

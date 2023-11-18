@@ -2,6 +2,7 @@ package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -16,7 +17,6 @@ import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.service.UserService;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Positive;
 import java.util.List;
 
 /**
@@ -26,6 +26,7 @@ import java.util.List;
 @RequestMapping(path = "/users")
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 public class UserController {
     private final UserService userService;
 
@@ -38,7 +39,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public CreatedUserDto getUser(@PathVariable @Positive long userId) {
+    public CreatedUserDto getUser(@PathVariable long userId) {
         log.info("Обработка запроса на получение пользователя с id = {}", userId);
         CreatedUserDto user = userService.getUserById(userId);
         log.info("Получен пользователь с id = {}", user.getId());
@@ -54,7 +55,7 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    public CreatedUserDto patchUser(@PathVariable @Positive long userId, @RequestBody UpdateUserDto dto) {
+    public CreatedUserDto patchUser(@PathVariable long userId, @Valid @RequestBody UpdateUserDto dto) {
         log.info("Обработка запроса на частичное обновление пользователя с id = {}", userId);
         CreatedUserDto updatedUser = userService.patchUser(userId, dto);
         log.info("Обновлены параметры пользователя с id = {}", updatedUser.getId());
@@ -62,7 +63,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    public void deleteUserById(@PathVariable @Positive long userId) {
+    public void deleteUserById(@PathVariable long userId) {
         log.info("Обработка запроса на удаление пользователя с id = {}", userId);
         userService.deleteUserById(userId);
         log.info("Пользователь с id = {} удален", userId);

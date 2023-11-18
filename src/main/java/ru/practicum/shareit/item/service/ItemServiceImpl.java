@@ -3,6 +3,7 @@ package ru.practicum.shareit.item.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.ItemMapper;
 import ru.practicum.shareit.item.dto.CreatedItemDto;
@@ -15,11 +16,11 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Validated
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
@@ -45,17 +46,25 @@ public class ItemServiceImpl implements ItemService {
         if (item.getOwner().getId() != ownerId) {
             throw new NotFoundException("Не найден данный объект у данного пользователя");
         }
-        Optional<String> newName = Optional.ofNullable(itemUpdates.getName());
-        item.setName(newName.orElse(item.getName()));
 
-        Optional<String> newDescription = Optional.ofNullable(itemUpdates.getDescription());
-        item.setDescription(newDescription.orElse(item.getDescription()));
+        if (itemUpdates.getName() == null) {
+            itemUpdates.setName(item.getName());
+        }
 
-        Optional<Boolean> newStatus = Optional.ofNullable(itemUpdates.getAvailable());
-        item.setAvailable(newStatus.orElse(item.getAvailable()));
+        if (itemUpdates.getDescription() == null) {
+            itemUpdates.setDescription(item.getDescription());
+        }
 
-        itemRepository.updateItem(item);
-        return mapper.itemToCreatedItemDto(item);
+        if (itemUpdates.getAvailable() == null) {
+            itemUpdates.setAvailable(item.getAvailable());
+        }
+
+        Item itemForUpdate = mapper.updateItemDtoToItem(itemUpdates);
+        itemForUpdate.setId(itemId);
+        itemForUpdate.setOwner(item.getOwner());
+
+        itemRepository.updateItem(itemForUpdate);
+        return mapper.itemToCreatedItemDto(itemForUpdate);
 
     }
 

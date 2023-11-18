@@ -2,6 +2,7 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -18,7 +19,6 @@ import ru.practicum.shareit.item.dto.UpdateItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Positive;
 import java.util.List;
 
 /**
@@ -28,11 +28,12 @@ import java.util.List;
 @RequestMapping("/items")
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 public class ItemController {
     private final ItemService itemService;
 
     @GetMapping
-    public List<CreatedItemDto> getAllUserItems(@RequestHeader(value = "X-Sharer-User-Id") @Positive long ownerId) {
+    public List<CreatedItemDto> getAllUserItems(@RequestHeader(value = "X-Sharer-User-Id") long ownerId) {
         log.info("Обработка запроса на получение всех вещей пользователя с id = {}", ownerId);
         List<CreatedItemDto> items = itemService.getItemsByOwnerId(ownerId);
         log.info("Получены все вещи пользователя с id = {}", ownerId);
@@ -40,7 +41,7 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public CreatedItemDto getItemById(@PathVariable @Positive long itemId) {
+    public CreatedItemDto getItemById(@PathVariable long itemId) {
         log.info("Обработка запроса на получение вещи с id = {}", itemId);
         CreatedItemDto dto = itemService.getItemById(itemId);
         log.info("Получена вещь с id = {}", dto.getId());
@@ -56,7 +57,7 @@ public class ItemController {
     }
 
     @PostMapping
-    public CreatedItemDto createItem(@RequestHeader("X-Sharer-User-Id") @Positive long ownerId, @Valid @RequestBody ItemDto item) {
+    public CreatedItemDto createItem(@RequestHeader("X-Sharer-User-Id") long ownerId, @Valid @RequestBody ItemDto item) {
         log.info("Обработка запроса на создание новой вещи пользователем с id = {}", ownerId);
         CreatedItemDto dto = itemService.createItem(item, ownerId);
         log.info("создана новая вешь с id = {}", dto.getId());
@@ -64,8 +65,8 @@ public class ItemController {
     }
 
     @PatchMapping("/{itemId}")
-    public CreatedItemDto patchItem(@RequestHeader("X-Sharer-User-Id") @Positive long ownerId,
-                                    @PathVariable @Positive long itemId,
+    public CreatedItemDto patchItem(@RequestHeader("X-Sharer-User-Id") long ownerId,
+                                    @PathVariable long itemId,
                                     @RequestBody UpdateItemDto item) {
         log.info("Обработка запроса на частичное обновление вещи с id = {} пользователем с id = {}", itemId, ownerId);
         CreatedItemDto updatedItem = itemService.patchItem(item, itemId, ownerId);
@@ -74,7 +75,7 @@ public class ItemController {
     }
 
     @DeleteMapping("/{itemId}")
-    public void deleteItemById(@PathVariable @Positive long itemId) {
+    public void deleteItemById(@PathVariable long itemId) {
         log.info("Обработка запроса на удаление вещи с id = {}", itemId);
         itemService.deleteItemById(itemId);
         log.info("Удалена вешь с id = {}", itemId);

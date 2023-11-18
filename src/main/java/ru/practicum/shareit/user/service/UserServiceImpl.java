@@ -13,7 +13,6 @@ import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,16 +35,18 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.getUserById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователя с id = " + userId + " не существует"));
-        Optional<String> newName = Optional.ofNullable(userUpdates.getName());
-        user.setName(newName.orElse(user.getName()));
+        if (userUpdates.getName() == null) {
+            userUpdates.setName(user.getName());
+        }
 
-        Optional<String> newEmail = Optional.ofNullable(userUpdates.getEmail());
-        user.setEmail(newEmail.orElse(user.getEmail()));
+        if (userUpdates.getEmail() == null) {
+            userUpdates.setEmail(user.getEmail());
+        }
+        User userForUpdate = mapper.updateUserDtoToUser(userUpdates);
+        userForUpdate.setId(userId);
 
-        userRepository.updateUser(user);
-        User updatedUser = userRepository.getUserById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователя с id = " + userId + " не существует"));
-        return mapper.userToCreatedUserDto(updatedUser);
+        userRepository.updateUser(userForUpdate);
+        return mapper.userToCreatedUserDto(userForUpdate);
 
     }
 
