@@ -59,7 +59,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public CreatedBookingDto approveBooking(Long bookingId, boolean isApproved, Long ownerId) {
-        User booker = userRepository.findById(ownerId)
+        userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование с id = " + bookingId + " не найдено"));
@@ -68,8 +68,8 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("Не верный владелец вещи");
         }
 
-        if (booking.getStatus().equals(BookingStatus.APPROVED)) {
-            throw new BookingException("Бронирование уже подстверждено");
+        if (!booking.getStatus().equals(BookingStatus.WAITING)) {
+            throw new BookingException("Бронирование уже подтверждено");
         }
         if (isApproved) {
             booking.setStatus(BookingStatus.APPROVED);

@@ -90,6 +90,9 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional(readOnly = true)
     public CreatedItemDto getItemById(long id, long requesterId) {
+        userRepository.findById(requesterId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + requesterId + " не найден"));
+
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("объект с id = " + id + " не найден"));
         CreatedItemDto itemDto = mapper.itemToCreatedItemDto(item);

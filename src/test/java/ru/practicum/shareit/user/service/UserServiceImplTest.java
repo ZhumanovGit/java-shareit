@@ -53,7 +53,7 @@ class UserServiceImplTest {
                 .name("test")
                 .email("testEmail@ya.com")
                 .build();
-        when(userRepository.createUser(user)).thenReturn(User.builder()
+        when(userRepository.save(user)).thenReturn(User.builder()
                 .id(1L)
                 .name(user.getName())
                 .email(user.getEmail())
@@ -72,7 +72,7 @@ class UserServiceImplTest {
                 .email("testEmail@ya.com")
                 .build();
         UpdateUserDto userUpdates = UpdateUserDto.builder().name("newTest").email("newEmail@ya.com").build();
-        when(userRepository.getUserById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         CreatedUserDto updatedUser = service.patchUser(user.getId(), userUpdates);
 
@@ -89,7 +89,7 @@ class UserServiceImplTest {
                 .email("testEmail@ya.com")
                 .build();
         CreatedUserDto expectedUser = mapper.userToCreatedUserDto(user);
-        when(userRepository.getUserById(user.getId())).thenReturn(Optional.of(user));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
 
         CreatedUserDto actualUser = service.getUserById(user.getId());
 
@@ -107,7 +107,7 @@ class UserServiceImplTest {
 
     @Test
     public void getUsers_whenUsersIsEmpty_thenReturnEmptyList() {
-        when(userRepository.getUsers()).thenReturn(new ArrayList<>());
+        when(userRepository.findAll()).thenReturn(new ArrayList<>());
 
         List<CreatedUserDto> users = service.getUsers();
 
@@ -131,7 +131,7 @@ class UserServiceImplTest {
                 .name("test")
                 .email("testEmail@ya.com")
                 .build();
-        when(userRepository.getUsers()).thenReturn(List.of(user1, user2, user3));
+        when(userRepository.findAll()).thenReturn(List.of(user1, user2, user3));
 
         List<CreatedUserDto> users = service.getUsers();
 
