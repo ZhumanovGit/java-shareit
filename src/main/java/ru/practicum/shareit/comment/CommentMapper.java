@@ -13,7 +13,7 @@ public class CommentMapper {
                 .build();
     }
 
-    public CreatedCommentDto commentToCreatedCommentDto (Comment comment) {
+    public CreatedCommentDto commentToCreatedCommentDto(Comment comment) {
         return CreatedCommentDto.builder()
                 .id(comment.getId())
                 .text(comment.getText())

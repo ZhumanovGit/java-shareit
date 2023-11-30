@@ -8,7 +8,6 @@ import ru.practicum.shareit.comment.CommentMapper;
 import ru.practicum.shareit.comment.CommentRepository;
 import ru.practicum.shareit.comment.dto.CommentDto;
 import ru.practicum.shareit.comment.dto.CreatedCommentDto;
-import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.exception.model.PostCommentException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;

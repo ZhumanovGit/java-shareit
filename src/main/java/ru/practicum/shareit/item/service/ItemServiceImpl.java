@@ -12,7 +12,6 @@ import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.comment.Comment;
 import ru.practicum.shareit.comment.CommentMapper;
 import ru.practicum.shareit.comment.CommentRepository;
-import ru.practicum.shareit.comment.dto.CreatedCommentDto;
 import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.ItemMapper;
 import ru.practicum.shareit.item.dto.CreatedItemDto;
