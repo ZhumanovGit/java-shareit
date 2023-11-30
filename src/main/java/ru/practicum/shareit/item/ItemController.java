@@ -13,8 +13,12 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.shareit.comment.dto.CommentDto;
+import ru.practicum.shareit.comment.dto.CreatedCommentDto;
+import ru.practicum.shareit.comment.service.CommentService;
 import ru.practicum.shareit.item.dto.CreatedItemDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ManyCreatedItemsDto;
 import ru.practicum.shareit.item.dto.UpdateItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
@@ -31,19 +35,21 @@ import java.util.List;
 @Validated
 public class ItemController {
     private final ItemService itemService;
+    private final CommentService commentService;
 
     @GetMapping
-    public List<CreatedItemDto> getAllUserItems(@RequestHeader(value = "X-Sharer-User-Id") long ownerId) {
+    public List<ManyCreatedItemsDto> getAllUserItems(@RequestHeader(value = "X-Sharer-User-Id") long ownerId) {
         log.info("Обработка запроса на получение всех вещей пользователя с id = {}", ownerId);
-        List<CreatedItemDto> items = itemService.getItemsByOwnerId(ownerId);
+        List<ManyCreatedItemsDto> items = itemService.getItemsByOwnerId(ownerId);
         log.info("Получены все вещи пользователя с id = {}", ownerId);
         return items;
     }
 
     @GetMapping("/{itemId}")
-    public CreatedItemDto getItemById(@PathVariable long itemId) {
+    public CreatedItemDto getItemById(@PathVariable long itemId,
+                                      @RequestHeader(value = "X-Sharer-User-Id") long requesterId) {
         log.info("Обработка запроса на получение вещи с id = {}", itemId);
-        CreatedItemDto dto = itemService.getItemById(itemId);
+        CreatedItemDto dto = itemService.getItemById(itemId, requesterId);
         log.info("Получена вещь с id = {}", dto.getId());
         return dto;
     }
@@ -86,6 +92,16 @@ public class ItemController {
         log.info("Обработка запроса на удаление всех вещей");
         itemService.deleteItems();
         log.info("Все вещи удалены");
+    }
+
+    @PostMapping("/{itemId}/comment")
+    public CreatedCommentDto postComment(@RequestHeader("X-Sharer-User-Id") long authorId,
+                                         @PathVariable long itemId,
+                                         @Valid @RequestBody CommentDto dto) {
+        log.info("Обработка запроса на создание коментария к вещи с id = {} пользователем с id = {}", itemId, authorId);
+        CreatedCommentDto comment = commentService.createNewComment(dto, itemId, authorId);
+        log.info("Создан комментарий с id = {}", comment.getId());
+        return comment;
     }
 
 

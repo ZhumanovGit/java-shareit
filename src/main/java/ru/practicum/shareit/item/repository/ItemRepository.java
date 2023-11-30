@@ -1,27 +1,24 @@
 package ru.practicum.shareit.item.repository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import ru.practicum.shareit.item.model.Item;
 
 import java.util.List;
-import java.util.Optional;
 
-public interface ItemRepository {
+public interface ItemRepository extends JpaRepository<Item, Long> {
+    List<Item> findAllByOwnerId(Long ownerId);
 
-    Item createItem(Item item);
+    /*"select new ru.practicum.item.model.Item(it.id, it.name, it.description, it.available) " +
+            "from Item as it " +
+            "where upper(it.name) like upper(concat('%', ?1, '%')) " +
+            "or upper(it.description) like upper(concat('%', ?1, '%'))"*/
 
-    void updateItem(Item item);
+    @Query("select it " +
+            "from Item as it " +
+            "where upper(it.name) like upper(concat('%', ?1, '%')) " +
+            "or upper(it.description) like upper(concat('%', ?1, '%'))")
+    List<Item> findAllByNameOrDesc(String searchString);
 
-    Optional<Item> getItemById(long id);
-
-    List<Item> getItems();
-
-    List<Item> getItemsByOwnerId(long ownerId);
-
-    List<Item> getItemsByNameOrDesc(String name);
-
-    void deleteAllItemsByOwnerId(long ownerId);
-
-    void deleteItem(long id);
-
-    void deleteAllItems();
+    void deleteAllByOwnerId(Long ownerId);
 }
