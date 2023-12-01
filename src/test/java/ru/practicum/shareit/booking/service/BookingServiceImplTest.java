@@ -4,8 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
+import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
-import ru.practicum.shareit.booking.dto.CreatedBookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.exception.model.BookingException;
@@ -40,7 +40,7 @@ class BookingServiceImplTest {
         bookingService = new BookingServiceImpl(bookingRepository, userRepository, itemRepository, mapper);
     }
 
-    void assertEqualBooking(CreatedBookingDto o1, CreatedBookingDto o2) {
+    void assertEqualBooking(BookingDto o1, BookingDto o2) {
         assertEquals(o1.getId(), o2.getId());
         assertEquals(o1.getStart(), o2.getStart());
         assertEquals(o1.getEnd(), o2.getEnd());
@@ -53,12 +53,12 @@ class BookingServiceImplTest {
         User booker = User.builder().id(1L).build();
         User owner = User.builder().id(2L).build();
         Item item = Item.builder().id(1L).available(true).owner(owner).build();
-        BookingDto dto = BookingDto.builder()
+        BookingCreateDto dto = BookingCreateDto.builder()
                 .itemId(item.getId())
                 .start(LocalDateTime.of(2021, 1, 1, 1, 1))
                 .end(LocalDateTime.of(2021, 2, 1, 1, 1))
                 .build();
-        Booking expectedBooking = mapper.bookingDtoToBooking(dto);
+        Booking expectedBooking = mapper.bookingCreateDtoToBooking(dto);
         expectedBooking.setId(1L);
         expectedBooking.setItem(item);
         expectedBooking.setBooker(booker);
@@ -72,14 +72,14 @@ class BookingServiceImplTest {
                 .booker(booker)
                 .build());
 
-        CreatedBookingDto actualBooking = bookingService.createBooking(dto, booker.getId());
+        BookingDto actualBooking = bookingService.createBooking(dto, booker.getId());
 
-        assertEqualBooking(mapper.bookingToCreatedBookingDto(expectedBooking), actualBooking);
+        assertEqualBooking(mapper.bookingToBookingDto(expectedBooking), actualBooking);
     }
 
     @Test
     public void createBooking_whenBookerIsNotFound_thenThrowException() {
-        BookingDto dto = BookingDto.builder()
+        BookingCreateDto dto = BookingCreateDto.builder()
                 .itemId(3L)
                 .start(LocalDateTime.of(2021, 1, 1, 1, 1))
                 .end(LocalDateTime.of(2021, 2, 1, 1, 1))
@@ -95,7 +95,7 @@ class BookingServiceImplTest {
     @Test
     public void createBooking_whenItemIsNotFound_thenThrowException() {
         User booker = User.builder().id(1L).build();
-        BookingDto dto = BookingDto.builder()
+        BookingCreateDto dto = BookingCreateDto.builder()
                 .itemId(3L)
                 .start(LocalDateTime.of(2021, 1, 1, 1, 1))
                 .end(LocalDateTime.of(2021, 2, 1, 1, 1))
@@ -114,7 +114,7 @@ class BookingServiceImplTest {
         User booker = User.builder().id(1L).build();
         User owner = User.builder().id(2L).build();
         Item item = Item.builder().id(1L).available(false).owner(owner).build();
-        BookingDto dto = BookingDto.builder()
+        BookingCreateDto dto = BookingCreateDto.builder()
                 .itemId(item.getId())
                 .start(LocalDateTime.of(2021, 1, 1, 1, 1))
                 .end(LocalDateTime.of(2021, 2, 1, 1, 1))
@@ -133,7 +133,7 @@ class BookingServiceImplTest {
         User booker = User.builder().id(1L).build();
         User owner = User.builder().id(1L).build();
         Item item = Item.builder().id(1L).available(true).owner(owner).build();
-        BookingDto dto = BookingDto.builder()
+        BookingCreateDto dto = BookingCreateDto.builder()
                 .itemId(item.getId())
                 .start(LocalDateTime.of(2021, 1, 1, 1, 1))
                 .end(LocalDateTime.of(2021, 2, 1, 1, 1))
@@ -152,7 +152,7 @@ class BookingServiceImplTest {
         User booker = User.builder().id(1L).build();
         User owner = User.builder().id(2L).build();
         Item item = Item.builder().id(1L).available(true).owner(owner).build();
-        BookingDto dto = BookingDto.builder()
+        BookingCreateDto dto = BookingCreateDto.builder()
                 .itemId(item.getId())
                 .start(LocalDateTime.of(2021, 2, 1, 1, 1))
                 .end(LocalDateTime.of(2021, 1, 1, 1, 1))
@@ -188,12 +188,12 @@ class BookingServiceImplTest {
                 .status(BookingStatus.APPROVED)
                 .build();
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
-        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
+        when(bookingRepository.findByIdAndItemOwnerId(booking.getId(), owner.getId())).thenReturn(Optional.of(booking));
         when(bookingRepository.save(booking)).thenReturn(expectedBooking);
 
-        CreatedBookingDto newBooking = bookingService.approveBooking(booking.getId(), true, owner.getId());
+        BookingDto newBooking = bookingService.approveBooking(booking.getId(), true, owner.getId());
 
-        assertEqualBooking(mapper.bookingToCreatedBookingDto(expectedBooking), newBooking);
+        assertEqualBooking(mapper.bookingToBookingDto(expectedBooking), newBooking);
     }
 
     @Test
@@ -252,7 +252,7 @@ class BookingServiceImplTest {
                 .booker(booker)
                 .status(BookingStatus.WAITING)
                 .build();
-        String expectedResponse = "Не верный владелец вещи";
+        String expectedResponse = "Бронирование с id = " + booking.getId() + " не найдено";
         when(userRepository.findById(3L)).thenReturn(Optional.of(owner));
         when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
 
@@ -276,7 +276,7 @@ class BookingServiceImplTest {
                 .build();
         String expectedResponse = "Бронирование уже подтверждено";
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
-        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
+        when(bookingRepository.findByIdAndItemOwnerId(booking.getId(), owner.getId())).thenReturn(Optional.of(booking));
 
         Throwable throwable = assertThrows(BookingException.class, () -> bookingService.approveBooking(booking.getId(), true, owner.getId()));
 
@@ -299,9 +299,9 @@ class BookingServiceImplTest {
         when(userRepository.findById(booker.getId())).thenReturn(Optional.of(booker));
         when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
 
-        CreatedBookingDto actualBooking = bookingService.getBookingById(booking.getId(), booker.getId());
+        BookingDto actualBooking = bookingService.getBookingById(booking.getId(), booker.getId());
 
-        assertEqualBooking(mapper.bookingToCreatedBookingDto(booking), actualBooking);
+        assertEqualBooking(mapper.bookingToBookingDto(booking), actualBooking);
     }
 
     @Test

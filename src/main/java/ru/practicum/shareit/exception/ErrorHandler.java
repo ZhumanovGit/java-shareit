@@ -2,7 +2,6 @@ package ru.practicum.shareit.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -23,61 +22,59 @@ import java.util.stream.Collectors;
 @RestControllerAdvice(basePackages = "ru.practicum.shareit")
 public class ErrorHandler {
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ExceptionResponse> handleValidateException(final ConstraintViolationException e) {
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ExceptionResponse handleValidateException(final ConstraintViolationException e) {
         Map<String, String> errors = e.getConstraintViolations()
                 .stream()
                 .collect(Collectors.toMap(
                         f -> f.getPropertyPath().toString(),
                         f -> f.getMessage() != null ? f.getMessage() : ""));
         log.warn("ConstraintViolationExceptions, {}", errors.values());
-        ExceptionResponse exceptionResponse = new ExceptionResponse(e.getMessage());
-        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
+        return new ExceptionResponse(e.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ExceptionResponse> handleMethodArgumentNotValidException(final MethodArgumentNotValidException e) {
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ExceptionResponse handleMethodArgumentNotValidException(final MethodArgumentNotValidException e) {
         log.warn("MethodArgumentNotValidException, {}", e.getMessage());
-
-        ExceptionResponse exceptionResponse = new ExceptionResponse(e.getMessage());
-        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
+        return new ExceptionResponse(e.getMessage());
     }
 
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ExceptionResponse> handleNotFoundException(final NotFoundException e) {
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ExceptionResponse handleNotFoundException(final NotFoundException e) {
         log.warn("NotFoundException, {}", e.getMessage());
-        ExceptionResponse exceptionResponse = new ExceptionResponse(e.getMessage());
-        return new ResponseEntity<>(exceptionResponse, HttpStatus.NOT_FOUND);
+        return new ExceptionResponse(e.getMessage());
     }
 
     @ExceptionHandler(UserEmailIsAlreadyExists.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ResponseEntity<ExceptionResponse> handleUserEmailIsAlreadyExists(final UserEmailIsAlreadyExists e) {
+    public ExceptionResponse handleUserEmailIsAlreadyExists(final UserEmailIsAlreadyExists e) {
         log.warn("UserEmailIsAlreadyExists, {}", e.getMessage());
-        ExceptionResponse exceptionResponse = new ExceptionResponse(e.getMessage());
-        return new ResponseEntity<>(exceptionResponse, HttpStatus.CONFLICT);
+        return new ExceptionResponse(e.getMessage());
     }
 
     @ExceptionHandler(BookingException.class)
-    public ResponseEntity<ExceptionResponse> handleItemBookedException(final BookingException e) {
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ExceptionResponse handleItemBookedException(final BookingException e) {
         log.warn("ItemBookedException, {}", e.getMessage());
-        ExceptionResponse exceptionResponse = new ExceptionResponse(e.getMessage());
-        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
+        return new ExceptionResponse(e.getMessage());
 
     }
 
     @ExceptionHandler(PostCommentException.class)
-    public ResponseEntity<ExceptionResponse> handlePostCommentException(final PostCommentException e) {
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ExceptionResponse handlePostCommentException(final PostCommentException e) {
         log.warn("PostCommentException {}", e.getMessage());
-        ExceptionResponse exceptionResponse = new ExceptionResponse(e.getMessage());
-        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
+        return new ExceptionResponse(e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ResponseEntity<ExceptionResponse> handleOtherExceptions(final Exception e) {
+    public ExceptionResponse handleOtherExceptions(final Exception e) {
         log.warn("Внутреннее исключение {}", e.getMessage(), e);
         ExceptionResponse exceptionResponse = new ExceptionResponse(e.getMessage(), printStackTrace(e));
-        return new ResponseEntity<>(exceptionResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ExceptionResponse(e.getMessage(), printStackTrace(e));
     }
 
     private String printStackTrace(Exception e) {

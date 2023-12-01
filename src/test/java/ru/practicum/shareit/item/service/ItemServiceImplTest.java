@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.model.BookingStatus;
@@ -9,10 +10,10 @@ import ru.practicum.shareit.comment.CommentMapper;
 import ru.practicum.shareit.comment.CommentRepository;
 import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.ItemMapper;
-import ru.practicum.shareit.item.dto.CreatedItemDto;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ManyCreatedItemsDto;
-import ru.practicum.shareit.item.dto.UpdateItemDto;
+import ru.practicum.shareit.item.dto.ItemCreateDto;
+import ru.practicum.shareit.item.dto.ItemInfoDto;
+import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -58,7 +60,7 @@ class ItemServiceImplTest {
                 commentMapper);
     }
 
-    void assertEqualItem(CreatedItemDto o1, CreatedItemDto o2) {
+    void assertEqualItem(ItemDto o1, ItemDto o2) {
         assertEquals(o1.getId(), o2.getId());
         assertEquals(o1.getName(), o2.getName());
         assertEquals(o1.getDescription(), o2.getDescription());
@@ -71,12 +73,12 @@ class ItemServiceImplTest {
                 .name("name")
                 .email("name@e.mail")
                 .build();
-        ItemDto dto = ItemDto.builder()
+        ItemCreateDto dto = ItemCreateDto.builder()
                 .name("name")
                 .description("description")
                 .available(true)
                 .build();
-        Item item = mapper.itemDtoToItem(dto);
+        Item item = mapper.itemCreateDtoToItem(dto);
         Item expectedItem = Item.builder()
                 .id(1L)
                 .name("name")
@@ -86,14 +88,14 @@ class ItemServiceImplTest {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(expectedUser));
         when(itemRepository.save(any())).thenReturn(expectedItem);
 
-        CreatedItemDto actual = itemService.createItem(dto, expectedUser.getId());
+        ItemDto actual = itemService.createItem(dto, expectedUser.getId());
 
-        assertEqualItem(mapper.itemToCreatedItemDto(expectedItem), actual);
+        assertEqualItem(mapper.itemToItemDto(expectedItem), actual);
     }
 
     @Test
     public void createItem_whenOwnerIsNotFound_thenThrowUserNotFoundException() {
-        ItemDto item = ItemDto.builder()
+        ItemCreateDto item = ItemCreateDto.builder()
                 .name("asd")
                 .description("testDesc")
                 .available(true)
@@ -116,10 +118,10 @@ class ItemServiceImplTest {
                 .available(true)
                 .owner(owner)
                 .build();
-        UpdateItemDto itemUpdates = UpdateItemDto.builder().name("newTest").description("new desc").available(false).build();
+        ItemUpdateDto itemUpdates = ItemUpdateDto.builder().name("newTest").description("new desc").available(false).build();
         when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
 
-        CreatedItemDto updatedItem = itemService.patchItem(itemUpdates, item.getId(), owner.getId());
+        ItemDto updatedItem = itemService.patchItem(itemUpdates, item.getId(), owner.getId());
 
         assertEquals(item.getId(), updatedItem.getId());
         assertEquals(itemUpdates.getName(), updatedItem.getName());
@@ -137,7 +139,7 @@ class ItemServiceImplTest {
                 .available(true)
                 .owner(owner)
                 .build();
-        UpdateItemDto itemUpdates = UpdateItemDto.builder().description("new desc").available(false).build();
+        ItemUpdateDto itemUpdates = ItemUpdateDto.builder().description("new desc").available(false).build();
         String expectedResponse = "Объект с id = 1 не найден";
 
         Throwable throwable = assertThrows(NotFoundException.class, () -> itemService.patchItem(itemUpdates, item.getId(), owner.getId()));
@@ -149,7 +151,7 @@ class ItemServiceImplTest {
     public void patchItem_whenItemWasNotFound_thenThrowNotFoundException() {
         User owner = User.builder().id(1L).build();
 
-        UpdateItemDto itemUpdates = UpdateItemDto.builder().name("asdasd").description("new desc").available(false).build();
+        ItemUpdateDto itemUpdates = ItemUpdateDto.builder().name("asdasd").description("new desc").available(false).build();
         when(itemRepository.findById(2L)).thenReturn(Optional.empty());
         String expectedResponse = "Объект с id = " + 2L + " не найден";
 
@@ -168,7 +170,7 @@ class ItemServiceImplTest {
                 .available(true)
                 .owner(owner)
                 .build();
-        UpdateItemDto itemUpdates = UpdateItemDto.builder().name("asdasd").description("new desc").available(false).build();
+        ItemUpdateDto itemUpdates = ItemUpdateDto.builder().name("asdasd").description("new desc").available(false).build();
         when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
         String expectedResponse = "Не найден данный объект у данного пользователя";
 
@@ -188,20 +190,23 @@ class ItemServiceImplTest {
                 .owner(owner)
                 .build();
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
-        when(commentRepository.findAllByItemIdOrderByCreatedAsc(item.getId())).thenReturn(new ArrayList<>());
+        when(commentRepository.findAllByItemId(item.getId(),
+                Sort.by(Sort.Direction.ASC, "created"))).thenReturn(new ArrayList<>());
         when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
         when(bookingRepository
-                .findFirstByItemIdAndStartBeforeAndStatusIsOrderByStartDesc(item.getId(),
+                .findFirstByItemIdAndStartBeforeAndStatusIs(item.getId(),
                         LocalDateTime.now(),
-                        BookingStatus.APPROVED)).thenReturn(Optional.empty());
+                        BookingStatus.APPROVED,
+                        Sort.by(Sort.Direction.DESC, "start"))).thenReturn(Optional.empty());
         when(bookingRepository
-                .findFirstByItemIdAndStartAfterAndStatusIsNotOrderByStartAsc(item.getId(),
+                .findFirstByItemIdAndStartAfterAndStatusIsNot(item.getId(),
                         LocalDateTime.now(),
-                        BookingStatus.REJECTED)).thenReturn(Optional.empty());
+                        BookingStatus.REJECTED,
+                        Sort.by(Sort.Direction.ASC, "start"))).thenReturn(Optional.empty());
 
-        CreatedItemDto actualItem = itemService.getItemById(item.getId(), owner.getId());
+        ItemDto actualItem = itemService.getItemById(item.getId(), owner.getId());
 
-        assertEqualItem(mapper.itemToCreatedItemDto(item), actualItem);
+        assertEqualItem(mapper.itemToItemDto(item), actualItem);
     }
 
     @Test
@@ -215,20 +220,23 @@ class ItemServiceImplTest {
                 .owner(owner)
                 .build();
         when(userRepository.findById(25L)).thenReturn(Optional.of(owner));
-        when(commentRepository.findAllByItemIdOrderByCreatedAsc(item.getId())).thenReturn(new ArrayList<>());
+        when(commentRepository.findAllByItemId(item.getId(),
+                Sort.by(Sort.Direction.ASC, "created"))).thenReturn(new ArrayList<>());
         when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
         when(bookingRepository
-                .findFirstByItemIdAndStartBeforeAndStatusIsOrderByStartDesc(item.getId(),
+                .findFirstByItemIdAndStartBeforeAndStatusIs(item.getId(),
                         LocalDateTime.now(),
-                        BookingStatus.APPROVED)).thenReturn(Optional.empty());
+                        BookingStatus.APPROVED,
+                        Sort.by(Sort.Direction.DESC, "start"))).thenReturn(Optional.empty());
         when(bookingRepository
-                .findFirstByItemIdAndStartAfterAndStatusIsNotOrderByStartAsc(item.getId(),
+                .findFirstByItemIdAndStartAfterAndStatusIsNot(item.getId(),
                         LocalDateTime.now(),
-                        BookingStatus.REJECTED)).thenReturn(Optional.empty());
+                        BookingStatus.REJECTED,
+                        Sort.by(Sort.Direction.ASC, "start"))).thenReturn(Optional.empty());
 
-        CreatedItemDto actualItem = itemService.getItemById(item.getId(), 25L);
+        ItemDto actualItem = itemService.getItemById(item.getId(), 25L);
 
-        assertEqualItem(mapper.itemToCreatedItemDto(item), actualItem);
+        assertEqualItem(mapper.itemToItemDto(item), actualItem);
     }
 
     @Test
@@ -293,14 +301,14 @@ class ItemServiceImplTest {
         when(bookingRepository.findAllByItemIdInAndStartAfterAndStatusIsNot(List.of(1L, 2L, 3L),
                 LocalDateTime.now(), BookingStatus.REJECTED)).thenReturn(new ArrayList<>());
 
-        List<ManyCreatedItemsDto> items = itemService.getItemsByOwnerId(owner.getId());
+        List<ItemInfoDto> items = itemService.getItemsByOwnerId(owner.getId());
 
         assertEquals(3, items.size());
     }
 
     @Test
     public void getItemsByNameOrDesc_whenStringIsBlank_thenReturnEmptyList() {
-        List<CreatedItemDto> items = itemService.getItemsByNameOrDesc("");
+        List<ItemDto> items = itemService.getItemsByNameOrDesc("");
 
         assertEquals(0, items.size());
     }
@@ -331,7 +339,7 @@ class ItemServiceImplTest {
                 .build();
         when(itemRepository.findAllByNameOrDesc("tes")).thenReturn(List.of(item1, item2, item3));
 
-        List<CreatedItemDto> items = itemService.getItemsByNameOrDesc("tEs");
+        List<ItemDto> items = itemService.getItemsByNameOrDesc("tEs");
 
         assertEquals(3, items.size());
     }

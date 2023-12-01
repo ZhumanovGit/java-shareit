@@ -5,9 +5,10 @@ import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 
+
 @Data
 @Builder
-public class ApproveBookingDto {
+public class BookingApproveDto {
     @NotNull
     private Long bookingId;
     @NotNull

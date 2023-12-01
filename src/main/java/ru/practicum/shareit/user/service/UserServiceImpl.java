@@ -4,13 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.comment.CommentRepository;
 import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserMapper;
-import ru.practicum.shareit.user.dto.CreatedUserDto;
-import ru.practicum.shareit.user.dto.UpdateUserDto;
+import ru.practicum.shareit.user.dto.UserCreateDto;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
@@ -21,20 +22,21 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
+    private final CommentRepository commentRepository;
     private final UserMapper mapper;
 
 
     @Override
     @Transactional
-    public CreatedUserDto createUser(UserDto userDto) {
-        User user = mapper.userDtoToUser(userDto);
+    public UserDto createUser(UserCreateDto userCreateDto) {
+        User user = mapper.userCreateDtoToUser(userCreateDto);
         User createdUser = userRepository.save(user);
-        return mapper.userToCreatedUserDto(createdUser);
+        return mapper.userToUserDto(createdUser);
     }
 
     @Override
     @Transactional
-    public CreatedUserDto patchUser(long userId, @NonNull UpdateUserDto userUpdates) {
+    public UserDto patchUser(long userId, @NonNull UserUpdateDto userUpdates) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователя с id = " + userId + " не существует"));
@@ -45,36 +47,38 @@ public class UserServiceImpl implements UserService {
         if (userUpdates.getEmail() == null) {
             userUpdates.setEmail(user.getEmail());
         }
-        User userForUpdate = mapper.updateUserDtoToUser(userUpdates);
+        User userForUpdate = mapper.userUpdateDtoToUser(userUpdates);
         userForUpdate.setId(userId);
 
         userRepository.save(userForUpdate);
-        return mapper.userToCreatedUserDto(userForUpdate);
+        return mapper.userToUserDto(userForUpdate);
 
     }
 
     @Override
-    public CreatedUserDto getUserById(long id) {
+    public UserDto getUserById(long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователя с id = " + id + " не существует"));
-        return mapper.userToCreatedUserDto(user);
+        return mapper.userToUserDto(user);
     }
 
     @Override
-    public List<CreatedUserDto> getUsers() {
+    public List<UserDto> getUsers() {
         return userRepository.findAll().stream()
-                .map(mapper::userToCreatedUserDto)
+                .map(mapper::userToUserDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public void deleteUserById(long id) {
+        commentRepository.deleteAllByAuthorId(id);
         itemRepository.deleteAllByOwnerId(id);
         userRepository.deleteById(id);
     }
 
     @Override
     public void deleteUsers() {
+        commentRepository.deleteAll();
         itemRepository.deleteAll();
         userRepository.deleteAll();
     }
