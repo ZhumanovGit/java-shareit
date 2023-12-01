@@ -10,7 +10,7 @@ public enum StateStatus {
     WAITING,
     REJECTED;
 
-    static public StateStatus getFromString(String value) {
+    public static StateStatus getFromString(String value) {
         String upperValue = value.toUpperCase();
         switch (upperValue) {
             case "ALL":

@@ -97,8 +97,8 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException("объект с id = " + id + " не найден"));
         ItemDto itemDto = mapper.itemToItemDto(item);
 
-        List<Comment> comments = commentRepository.findAllByItemId(item.getId()
-                , Sort.by(Sort.Direction.ASC, "created"));
+        List<Comment> comments = commentRepository.findAllByItemId(item.getId(),
+                Sort.by(Sort.Direction.ASC, "created"));
         if (!comments.isEmpty()) {
             itemDto.setComments(comments.stream()
                     .map(commentMapper::commentToCommentDto)

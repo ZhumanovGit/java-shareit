@@ -209,7 +209,7 @@ class BookingServiceImplTest {
                 .booker(booker)
                 .status(BookingStatus.WAITING)
                 .build();
-        String expectedResponse = "Пользователь с id = " +  owner.getId() + " не найден";
+        String expectedResponse = "Пользователь с id = " + owner.getId() + " не найден";
         when(userRepository.findById(owner.getId())).thenReturn(Optional.empty());
 
         Throwable throwable = assertThrows(NotFoundException.class, () -> bookingService.approveBooking(booking.getId(), true, owner.getId()));
