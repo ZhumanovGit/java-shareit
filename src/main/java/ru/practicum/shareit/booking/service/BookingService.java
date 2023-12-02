@@ -4,11 +4,12 @@ import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.StateStatus;
 
+import javax.validation.constraints.AssertTrue;
 import java.util.List;
 
 public interface BookingService {
 
-    BookingDto createBooking(BookingCreateDto dto, Long bookerId);
+    BookingDto createBooking(BookingCreateDto dto, Long bookerId, @AssertTrue Boolean isDataCorrected);
 
     BookingDto approveBooking(Long bookingId, boolean isApproved, Long ownerId);
 

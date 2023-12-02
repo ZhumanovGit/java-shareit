@@ -1,6 +1,9 @@
 package ru.practicum.shareit.item;
 
 import org.springframework.stereotype.Component;
+import ru.practicum.shareit.booking.dto.ItemBookingDto;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.comment.Comment;
 import ru.practicum.shareit.item.dto.ItemCreateDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemInfoDto;
@@ -9,7 +12,6 @@ import ru.practicum.shareit.item.model.Item;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class ItemMapper {
@@ -40,17 +42,35 @@ public class ItemMapper {
                 .build();
     }
 
-    public List<ItemInfoDto> itemToItemInfoDto(List<Item> items) {
-        return items.stream()
-                .map(item -> {
-                    return ItemInfoDto.builder()
-                            .id(item.getId())
-                            .name(item.getName())
-                            .description(item.getDescription())
-                            .available(item.getAvailable())
-                            .comments(new ArrayList<>())
-                            .build();
-                })
-                .collect(Collectors.toList());
+    public ItemInfoDto itemToItemInfoDto(Item item, List<Comment> comments, Booking next, Booking last) {
+        ItemBookingDto nextDto = null;
+        ItemBookingDto lastDto = null;
+
+        if (next != null) {
+            nextDto = ItemBookingDto.builder()
+                    .id(next.getId())
+                    .bookerId(next.getBooker().getId())
+                    .build();
+        }
+
+        if (last != null) {
+            lastDto = ItemBookingDto.builder()
+                    .id(last.getId())
+                    .bookerId(last.getBooker().getId())
+                    .build();
+        }
+
+
+        return ItemInfoDto.builder()
+                .id(item.getId())
+                .name(item.getName())
+                .description(item.getDescription())
+                .available(item.getAvailable())
+                .comments(comments)
+                .lastBooking(lastDto)
+                .nextBooking(nextDto)
+                .build();
+
+
     }
 }

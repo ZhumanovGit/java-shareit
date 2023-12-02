@@ -58,6 +58,7 @@ class BookingServiceImplTest {
                 .start(LocalDateTime.of(2021, 1, 1, 1, 1))
                 .end(LocalDateTime.of(2021, 2, 1, 1, 1))
                 .build();
+        Boolean isDataCorrect = dto.getStart().isBefore(dto.getEnd());
         Booking expectedBooking = mapper.bookingCreateDtoToBooking(dto);
         expectedBooking.setId(1L);
         expectedBooking.setItem(item);
@@ -72,7 +73,7 @@ class BookingServiceImplTest {
                 .booker(booker)
                 .build());
 
-        BookingDto actualBooking = bookingService.createBooking(dto, booker.getId());
+        BookingDto actualBooking = bookingService.createBooking(dto, booker.getId(), isDataCorrect);
 
         assertEqualBooking(mapper.bookingToBookingDto(expectedBooking), actualBooking);
     }
@@ -87,7 +88,7 @@ class BookingServiceImplTest {
         String expectedResponse = "Пользователь с id = 2 не найден";
         when(userRepository.findById(2L)).thenReturn(Optional.empty());
 
-        Throwable throwable = assertThrows(NotFoundException.class, () -> bookingService.createBooking(dto, 2L));
+        Throwable throwable = assertThrows(NotFoundException.class, () -> bookingService.createBooking(dto, 2L, true));
 
         assertEquals(expectedResponse, throwable.getMessage());
     }
@@ -104,7 +105,7 @@ class BookingServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
         when(itemRepository.findById(dto.getItemId())).thenReturn(Optional.empty());
 
-        Throwable throwable = assertThrows(NotFoundException.class, () -> bookingService.createBooking(dto, booker.getId()));
+        Throwable throwable = assertThrows(NotFoundException.class, () -> bookingService.createBooking(dto, booker.getId(), true));
 
         assertEquals(expectedResponse, throwable.getMessage());
     }
@@ -123,7 +124,7 @@ class BookingServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
         when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
 
-        Throwable throwable = assertThrows(BookingException.class, () -> bookingService.createBooking(dto, booker.getId()));
+        Throwable throwable = assertThrows(BookingException.class, () -> bookingService.createBooking(dto, booker.getId(), true));
 
         assertEquals(expectedResponse, throwable.getMessage());
     }
@@ -142,26 +143,7 @@ class BookingServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
         when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
 
-        Throwable throwable = assertThrows(NotFoundException.class, () -> bookingService.createBooking(dto, booker.getId()));
-
-        assertEquals(expectedResponse, throwable.getMessage());
-    }
-
-    @Test
-    public void createBooking_whenStartAndEndTimeSameOrEndBeforeStart_thenThrowException() {
-        User booker = User.builder().id(1L).build();
-        User owner = User.builder().id(2L).build();
-        Item item = Item.builder().id(1L).available(true).owner(owner).build();
-        BookingCreateDto dto = BookingCreateDto.builder()
-                .itemId(item.getId())
-                .start(LocalDateTime.of(2021, 2, 1, 1, 1))
-                .end(LocalDateTime.of(2021, 1, 1, 1, 1))
-                .build();
-        String expectedResponse = "Некорректное время аренды";
-        when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
-        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
-
-        Throwable throwable = assertThrows(BookingException.class, () -> bookingService.createBooking(dto, booker.getId()));
+        Throwable throwable = assertThrows(NotFoundException.class, () -> bookingService.createBooking(dto, booker.getId(), true));
 
         assertEquals(expectedResponse, throwable.getMessage());
     }

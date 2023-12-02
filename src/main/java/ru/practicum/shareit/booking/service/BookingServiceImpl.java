@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Validated
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
@@ -32,7 +34,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public BookingDto createBooking(BookingCreateDto dto, Long bookerId) {
+    public BookingDto createBooking(BookingCreateDto dto, Long bookerId, Boolean isDataCorrect) {
         User booker = userRepository.findById(bookerId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + bookerId + " не найден"));
         Long itemId = dto.getItemId();
@@ -50,11 +52,7 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("id владельца и арендатора совпадают");
         }
         Booking booking = mapper.bookingCreateDtoToBooking(dto);
-        LocalDateTime start = booking.getStart();
-        LocalDateTime end = booking.getEnd();
-        if (start.isAfter(end) || start.isEqual(end)) {
-            throw new BookingException("Некорректное время аренды");
-        }
+
         booking.setBooker(booker);
         booking.setItem(item);
         Booking createdBooking = bookingRepository.save(booking);

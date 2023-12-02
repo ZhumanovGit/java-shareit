@@ -142,9 +142,9 @@ public class ItemServiceImpl implements ItemService {
         userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
 
-        List<ItemInfoDto> items = mapper.itemToItemInfoDto(itemRepository.findAllByOwnerId(ownerId));
+        List<Item> items = itemRepository.findAllByOwnerId(ownerId);
         List<Long> itemIds = items.stream()
-                .map(ItemInfoDto::getId)
+                .map(Item::getId)
                 .collect(Collectors.toList());
         LocalDateTime now = LocalDateTime.now();
         List<Booking> previousBookings = bookingRepository
@@ -184,25 +184,16 @@ public class ItemServiceImpl implements ItemService {
             itemCommentsMap.computeIfAbsent(comment.getItem().getId(), k -> new ArrayList<>()).add(comment);
         }
 
-        for (ItemInfoDto item : items) {
+        List<ItemInfoDto> result = new ArrayList<>();
+        for (Item item : items) {
             Long itemId = item.getId();
             Booking lastBooking = itemsLastBookings.get(itemId);
-            if (lastBooking != null) {
-                item.setLastBooking(bookingMapper.bookingToItemBookingDto(itemsLastBookings.get(itemId)));
-            }
             Booking nextBooking = itemsNextBookings.get(itemId);
-            if (nextBooking != null) {
-                item.setNextBooking(bookingMapper.bookingToItemBookingDto(itemsNextBookings.get(itemId)));
-            }
-            List<Comment> itemComments = itemCommentsMap.get(itemId);
-            if (itemComments == null) {
-                item.setComments(new ArrayList<>());
-            } else {
-                item.setComments(itemComments);
-            }
+            List<Comment> itemComments = itemCommentsMap.getOrDefault(itemId, new ArrayList<>());
+            result.add(mapper.itemToItemInfoDto(item, itemComments, nextBooking, lastBooking));
         }
 
-        return items;
+        return result;
     }
 
     @Override

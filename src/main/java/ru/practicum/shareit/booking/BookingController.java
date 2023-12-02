@@ -31,8 +31,10 @@ public class BookingController {
     @PostMapping
     public BookingDto createBooking(@Valid @RequestBody BookingCreateDto dto,
                                     @RequestHeader("X-Sharer-User-Id") long bookerId) {
+
+        Boolean isDataCorrected = dto.getStart().isBefore(dto.getEnd());
         log.info("Обработка запроса на создание нового бронирования для пользователя с id = {}", bookerId);
-        BookingDto newBooking = bookingService.createBooking(dto, bookerId);
+        BookingDto newBooking = bookingService.createBooking(dto, bookerId, isDataCorrected);
         log.info("создано новое бронирование с id = {}", newBooking.getId());
         return newBooking;
     }
