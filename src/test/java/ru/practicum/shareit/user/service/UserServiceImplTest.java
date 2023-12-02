@@ -2,13 +2,14 @@ package ru.practicum.shareit.user.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.practicum.shareit.comment.CommentRepository;
 import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserMapper;
-import ru.practicum.shareit.user.dto.CreatedUserDto;
-import ru.practicum.shareit.user.dto.UpdateUserDto;
+import ru.practicum.shareit.user.dto.UserCreateDto;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.ArrayList;
@@ -17,12 +18,14 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class UserServiceImplTest {
     UserRepository userRepository;
     ItemRepository itemRepository;
+    CommentRepository commentRepository;
     UserServiceImpl service;
 
     UserMapper mapper;
@@ -31,11 +34,12 @@ class UserServiceImplTest {
     public void beforeEach() {
         userRepository = mock(UserRepository.class);
         itemRepository = mock(ItemRepository.class);
+        commentRepository = mock(CommentRepository.class);
         mapper = new UserMapper();
-        service = new UserServiceImpl(userRepository, itemRepository, mapper);
+        service = new UserServiceImpl(userRepository, itemRepository, commentRepository, mapper);
     }
 
-    void assertEqualsUser(CreatedUserDto o1, CreatedUserDto o2) {
+    void assertEqualsUser(UserDto o1, UserDto o2) {
         assertEquals(o1.getId(), o2.getId());
         assertEquals(o1.getName(), o2.getName());
         assertEquals(o1.getEmail(), o2.getEmail());
@@ -43,23 +47,23 @@ class UserServiceImplTest {
 
     @Test
     public void createUser_whenUserPassValidation_thenReturnNewUser() {
-        UserDto dto = UserDto.builder()
+        UserCreateDto dto = UserCreateDto.builder()
                 .name("test")
                 .email("testEmail@ya.com")
                 .build();
-        User user = mapper.userDtoToUser(dto);
-        CreatedUserDto expectedUser = CreatedUserDto.builder()
+        User user = mapper.userCreateDtoToUser(dto);
+        UserDto expectedUser = UserDto.builder()
                 .id(1L)
                 .name("test")
                 .email("testEmail@ya.com")
                 .build();
-        when(userRepository.createUser(user)).thenReturn(User.builder()
+        when(userRepository.save(any())).thenReturn(User.builder()
                 .id(1L)
                 .name(user.getName())
                 .email(user.getEmail())
                 .build());
 
-        CreatedUserDto actualUser = service.createUser(dto);
+        UserDto actualUser = service.createUser(dto);
 
         assertEqualsUser(expectedUser, actualUser);
     }
@@ -71,10 +75,10 @@ class UserServiceImplTest {
                 .name("test")
                 .email("testEmail@ya.com")
                 .build();
-        UpdateUserDto userUpdates = UpdateUserDto.builder().name("newTest").email("newEmail@ya.com").build();
-        when(userRepository.getUserById(1L)).thenReturn(Optional.of(user));
+        UserUpdateDto userUpdates = UserUpdateDto.builder().name("newTest").email("newEmail@ya.com").build();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        CreatedUserDto updatedUser = service.patchUser(user.getId(), userUpdates);
+        UserDto updatedUser = service.patchUser(user.getId(), userUpdates);
 
         assertEquals(user.getId(), updatedUser.getId());
         assertEquals(userUpdates.getName(), updatedUser.getName());
@@ -88,10 +92,10 @@ class UserServiceImplTest {
                 .name("test")
                 .email("testEmail@ya.com")
                 .build();
-        CreatedUserDto expectedUser = mapper.userToCreatedUserDto(user);
-        when(userRepository.getUserById(user.getId())).thenReturn(Optional.of(user));
+        UserDto expectedUser = mapper.userToUserDto(user);
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
 
-        CreatedUserDto actualUser = service.getUserById(user.getId());
+        UserDto actualUser = service.getUserById(user.getId());
 
         assertEqualsUser(expectedUser, actualUser);
     }
@@ -107,9 +111,9 @@ class UserServiceImplTest {
 
     @Test
     public void getUsers_whenUsersIsEmpty_thenReturnEmptyList() {
-        when(userRepository.getUsers()).thenReturn(new ArrayList<>());
+        when(userRepository.findAll()).thenReturn(new ArrayList<>());
 
-        List<CreatedUserDto> users = service.getUsers();
+        List<UserDto> users = service.getUsers();
 
         assertEquals(0, users.size());
     }
@@ -131,9 +135,9 @@ class UserServiceImplTest {
                 .name("test")
                 .email("testEmail@ya.com")
                 .build();
-        when(userRepository.getUsers()).thenReturn(List.of(user1, user2, user3));
+        when(userRepository.findAll()).thenReturn(List.of(user1, user2, user3));
 
-        List<CreatedUserDto> users = service.getUsers();
+        List<UserDto> users = service.getUsers();
 
         assertEquals(3, users.size());
     }

@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.shareit.user.dto.CreatedUserDto;
-import ru.practicum.shareit.user.dto.UpdateUserDto;
+import ru.practicum.shareit.user.dto.UserCreateDto;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.service.UserService;
 
 import javax.validation.Valid;
@@ -31,33 +31,33 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public List<CreatedUserDto> getUsers() {
+    public List<UserDto> getUsers() {
         log.info("Обработка запроса на получение всех пользователей");
-        List<CreatedUserDto> users = userService.getUsers();
+        List<UserDto> users = userService.getUsers();
         log.info("Получен список пользователей длиной {}", users.size());
         return users;
     }
 
     @GetMapping("/{userId}")
-    public CreatedUserDto getUser(@PathVariable long userId) {
+    public UserDto getUser(@PathVariable long userId) {
         log.info("Обработка запроса на получение пользователя с id = {}", userId);
-        CreatedUserDto user = userService.getUserById(userId);
+        UserDto user = userService.getUserById(userId);
         log.info("Получен пользователь с id = {}", user.getId());
         return user;
     }
 
     @PostMapping
-    public CreatedUserDto createUser(@RequestBody @Valid UserDto dto) {
+    public UserDto createUser(@RequestBody @Valid UserCreateDto dto) {
         log.info("Обработка запроса на создание пользователя");
-        CreatedUserDto createdUser = userService.createUser(dto);
+        UserDto createdUser = userService.createUser(dto);
         log.info("Создан пользователь с id = {}", createdUser.getId());
         return createdUser;
     }
 
     @PatchMapping("/{userId}")
-    public CreatedUserDto patchUser(@PathVariable long userId, @Valid @RequestBody UpdateUserDto dto) {
+    public UserDto patchUser(@PathVariable long userId, @Valid @RequestBody UserUpdateDto dto) {
         log.info("Обработка запроса на частичное обновление пользователя с id = {}", userId);
-        CreatedUserDto updatedUser = userService.patchUser(userId, dto);
+        UserDto updatedUser = userService.patchUser(userId, dto);
         log.info("Обновлены параметры пользователя с id = {}", updatedUser.getId());
         return updatedUser;
     }
