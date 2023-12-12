@@ -38,9 +38,11 @@ public class ItemController {
     private final CommentService commentService;
 
     @GetMapping
-    public List<ItemInfoDto> getAllUserItems(@RequestHeader(value = "X-Sharer-User-Id") long ownerId) {
+    public List<ItemInfoDto> getAllUserItems(@RequestHeader(value = "X-Sharer-User-Id") long ownerId,
+                                             @RequestParam(defaultValue = "0") int from,
+                                             @RequestParam(defaultValue = "1") int size) {
         log.info("Обработка запроса на получение всех вещей пользователя с id = {}", ownerId);
-        List<ItemInfoDto> items = itemService.getItemsByOwnerId(ownerId);
+        List<ItemInfoDto> items = itemService.getItemsByOwnerId(ownerId, from, size);
         log.info("Получены все вещи пользователя с id = {}", ownerId);
         return items;
     }
@@ -55,9 +57,11 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public List<ItemDto> searchItems(@RequestParam(value = "text") String text) {
+    public List<ItemDto> searchItems(@RequestParam(value = "text") String text,
+                                     @RequestParam(defaultValue = "0") int from,
+                                     @RequestParam(defaultValue = "1") int size) {
         log.info("Обработка запроса на выполнение поиска по строке {}", text);
-        List<ItemDto> items = itemService.getItemsByNameOrDesc(text);
+        List<ItemDto> items = itemService.getItemsByNameOrDesc(text, from, size);
         log.info("Получен список длиной {}", items.size());
         return items;
     }

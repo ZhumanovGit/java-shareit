@@ -96,7 +96,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookingDto> getAllBookingsForUser(Long userId, StateStatus state) {
+    public List<BookingDto> getAllBookingsForUser(Long userId, StateStatus state, int from, int size) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
         List<Booking> result;
@@ -131,7 +131,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookingDto> getAllBookingForOwner(Long ownerId, StateStatus state) {
+    public List<BookingDto> getAllBookingForOwner(Long ownerId, StateStatus state, int from, int size) {
         userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
         List<Item> items = itemRepository.findAllByOwnerId(ownerId);

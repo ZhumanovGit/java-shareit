@@ -61,7 +61,9 @@ public class BookingController {
 
     @GetMapping
     public List<BookingDto> getUserBookings(@RequestParam(name = "state", required = false, defaultValue = "ALL") String state,
-                                            @RequestHeader("X-Sharer-User-Id") long userId) {
+                                            @RequestHeader("X-Sharer-User-Id") long userId,
+                                            @RequestParam(defaultValue = "0") int from,
+                                            @RequestParam(defaultValue = "1") int size) {
         StateStatus value = StateStatus.getFromString(state);
         log.info("Обработка запроса на получение всех бронирований пользователя с id = {}, параметр поиска: {}", userId, value);
         List<BookingDto> bookings = bookingService.getAllBookingsForUser(userId, value);
@@ -72,7 +74,9 @@ public class BookingController {
 
     @GetMapping("/owner")
     public List<BookingDto> getOwnerBookings(@RequestParam(name = "state", required = false, defaultValue = "ALL") String state,
-                                             @RequestHeader("X-Sharer-User-Id") long ownerId) {
+                                             @RequestHeader("X-Sharer-User-Id") long ownerId,
+                                             @RequestParam(defaultValue = "0") int from,
+                                             @RequestParam(defaultValue = "1") int size) {
         StateStatus value = StateStatus.getFromString(state);
         log.info("Обработка запроса на получение всех бронирований пользователя с id = {}, параметр поиска: {}", ownerId, value);
         List<BookingDto> bookings = bookingService.getAllBookingForOwner(ownerId, value);
