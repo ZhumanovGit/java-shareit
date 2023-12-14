@@ -2,6 +2,9 @@ package ru.practicum.shareit.request;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.ItemMapper;
@@ -14,6 +17,8 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -137,6 +142,84 @@ class ItemRequestServiceImplTest {
         assertEquals(2, actual.size());
         assertEquals(2, actual.get(1).getItems().size());
         assertEquals(0, actual.get(0).getItems().size());
+    }
+
+    @Test
+    public void getUserRequests_whenUserWasNotFound_thenThrowException() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+        String expectedResponse = "Пользователь с id = 1 не найден";
+
+        Throwable throwable = assertThrows(NotFoundException.class, () -> service.getUserRequests(1L));
+
+        assertEquals(expectedResponse, throwable.getMessage());
+    }
+
+    @Test
+    public void getUserRequests_whenUserWasFoundAndRequestsWasNot_thenReturnEmptyList() {
+        User owner = User.builder().id(1L).build();
+        Sort sort = Sort.by(Sort.Direction.DESC, "created");
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(owner));
+        when(requestRepository.findAllByOwnerId(anyLong(), sort)).thenReturn(new ArrayList<>());
+
+        List<ItemRequestInfoDto> actual = service.getUserRequests(owner.getId());
+
+        assertEquals(0, actual.size());
+    }
+
+    @Test
+    public void getAllRequests_whenUserWasNotFound_thenThrowException() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+        String expectedResponse = "Пользователь с id = 1 не найден";
+
+        Throwable throwable = assertThrows(NotFoundException.class, () -> service.getAllRequests(1L, 0, 10));
+
+        assertEquals(expectedResponse, throwable.getMessage());
+    }
+
+    @Test
+    public void getAllRequests_whenUserWasFoundAndRequestsWasNot_thenReturnEmptyList() {
+        User owner = User.builder().id(1L).build();
+        Sort sort = Sort.by(Sort.Direction.DESC, "created");
+        PageRequest pageRequest = PageRequest.of(0, 10, sort);
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(owner));
+        when(requestRepository.findAllByOwnerIdNot(owner.getId(), pageRequest)).thenReturn(Page.empty());
+
+        List<ItemRequestInfoDto> actual = service.getAllRequests(owner.getId(), 0, 10);
+
+        assertEquals(0, actual.size());
+    }
+
+    @Test
+    public void getAllRequests_whenUserWasFoundAndItemsWasNot_thenReturnListOfRequest() {
+        User owner = User.builder().id(1L).build();
+        Sort sort = Sort.by(Sort.Direction.DESC, "created");
+        PageRequest pageRequest = PageRequest.of(0, 10, sort);
+        ItemRequest first = ItemRequest.builder()
+                .id(1L)
+                .owner(owner)
+                .description("first")
+                .created(LocalDateTime.of(2020, 1, 12, 10, 10))
+                .build();
+        ItemRequest second = ItemRequest.builder()
+                .id(2L)
+                .owner(owner)
+                .description("second")
+                .created(LocalDateTime.of(2022, 1, 12, 10, 10))
+                .build();
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(owner));
+        when(requestRepository.findAllByOwnerIdNot(owner.getId(), pageRequest)).thenReturn((Page<ItemRequest>) List.of(first, second));
+        when(itemRepository.findAllByRequestIdIn(anyList())).thenReturn(Collections.emptyList());
+
+        List<ItemRequestInfoDto> actual = service.getAllRequests(owner.getId(), 0, 10);
+
+        assertEquals(2, actual.size());
+        assertEquals(2, actual.get(0).getId());
+        assertEquals(1, actual.get(1).getId());
+    }
+
+    @Test
+    public void getAllRequests_whenUserWasFoundAndRequestsWasFoundAndItemsWasFound_thenReturnListOfRequests() {
+
     }
 
 

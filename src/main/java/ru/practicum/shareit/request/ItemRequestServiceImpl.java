@@ -17,10 +17,7 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -89,6 +86,9 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     private List<ItemRequestInfoDto> setItemsToRequests(List<ItemRequest> requests) {
+        if (requests.isEmpty()) {
+            return new ArrayList<>();
+        }
         List<Long> requestIds = requests.stream()
                 .map(ItemRequest::getId)
                 .collect(Collectors.toList());
