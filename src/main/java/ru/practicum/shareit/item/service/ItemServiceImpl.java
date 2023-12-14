@@ -150,8 +150,11 @@ public class ItemServiceImpl implements ItemService {
 
         userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
-
-        Page<Item> items = itemRepository.findAllByOwnerId(ownerId, PageRequest.of(from, size));
+        int page = 0;
+        if (from >= size) {
+            page = (from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size;
+        }
+        Page<Item> items = itemRepository.findAllByOwnerId(ownerId, PageRequest.of(page, size));
         List<Long> itemIds = items.stream()
                 .map(Item::getId)
                 .collect(Collectors.toList());
@@ -212,8 +215,11 @@ public class ItemServiceImpl implements ItemService {
             return new ArrayList<>();
         }
         String needSubstring = substring.toLowerCase();
-
-        Page<Item> items = itemRepository.findAllByNameOrDesc(needSubstring, PageRequest.of(from, size));
+        int page = 0;
+        if (from >= size) {
+            page = from % size == 0 ? (from / size) - 1 : from / size;
+        }
+        Page<Item> items = itemRepository.findAllByNameOrDesc(needSubstring, PageRequest.of(page, size));
         return items.stream()
                 .filter(Item::getAvailable)
                 .map(mapper::itemToItemDto)

@@ -63,7 +63,11 @@ public class ItemRequestServiceImpl implements ItemRequestService {
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
 
         Sort sort = Sort.by(Sort.Direction.DESC, "created");
-        Page<ItemRequest> requests = requestRepository.findAllByOwnerIdNot(userId, PageRequest.of(from, size, sort));
+        int page = 0;
+        if (from >= size) {
+            page = (from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size;
+        }
+        Page<ItemRequest> requests = requestRepository.findAllByOwnerIdNot(userId, PageRequest.of(page, size, sort));
 
         return setItemsToRequests(requests.toList());
     }

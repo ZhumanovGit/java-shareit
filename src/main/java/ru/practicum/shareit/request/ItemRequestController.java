@@ -16,6 +16,8 @@ import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.dto.ItemRequestInfoDto;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
@@ -44,8 +46,8 @@ public class ItemRequestController {
     }
 
     @GetMapping("/all")
-    public List<ItemRequestInfoDto> getAllOthers(@RequestParam(defaultValue = "0") int from,
-                                                 @RequestParam(defaultValue = "1") int size,
+    public List<ItemRequestInfoDto> getAllOthers(@PositiveOrZero @RequestParam(defaultValue = "0") int from,
+                                                 @Positive @RequestParam(defaultValue = "1") int size,
                                                  @RequestHeader("X-Sharer-User-Id") long userId) {
         log.info("Обработка запроса на получение чужих обращений");
         List<ItemRequestInfoDto> result = service.getAllRequests(userId, from, size);

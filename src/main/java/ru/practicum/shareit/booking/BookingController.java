@@ -16,8 +16,10 @@ import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.StateStatus;
 import ru.practicum.shareit.booking.service.BookingService;
+import ru.practicum.shareit.exception.model.BookingException;
 
 import javax.validation.Valid;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
@@ -62,11 +64,14 @@ public class BookingController {
     @GetMapping
     public List<BookingDto> getUserBookings(@RequestParam(name = "state", required = false, defaultValue = "ALL") String state,
                                             @RequestHeader("X-Sharer-User-Id") long userId,
-                                            @RequestParam(defaultValue = "0") int from,
-                                            @RequestParam(defaultValue = "1") int size) {
+                                            @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+                                            @PositiveOrZero @RequestParam(required = false) Integer size) {
+        if (size == null) {
+            size = Integer.MAX_VALUE;
+        }
         StateStatus value = StateStatus.getFromString(state);
         log.info("Обработка запроса на получение всех бронирований пользователя с id = {}, параметр поиска: {}", userId, value);
-        List<BookingDto> bookings = bookingService.getAllBookingsForUser(userId, value);
+        List<BookingDto> bookings = bookingService.getAllBookingsForUser(userId, value, from, size);
         log.info("Получен список длиной {}", bookings.size());
         return bookings;
 
@@ -75,11 +80,15 @@ public class BookingController {
     @GetMapping("/owner")
     public List<BookingDto> getOwnerBookings(@RequestParam(name = "state", required = false, defaultValue = "ALL") String state,
                                              @RequestHeader("X-Sharer-User-Id") long ownerId,
-                                             @RequestParam(defaultValue = "0") int from,
-                                             @RequestParam(defaultValue = "1") int size) {
+                                             @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+                                             @PositiveOrZero @RequestParam(required = false) Integer size) {
+        if (size == null) {
+            size = Integer.MAX_VALUE;
+        }
+
         StateStatus value = StateStatus.getFromString(state);
         log.info("Обработка запроса на получение всех бронирований пользователя с id = {}, параметр поиска: {}", ownerId, value);
-        List<BookingDto> bookings = bookingService.getAllBookingForOwner(ownerId, value);
+        List<BookingDto> bookings = bookingService.getAllBookingForOwner(ownerId, value, from, size);
         log.info("Получен список длиной {}", bookings.size());
         return bookings;
 

@@ -23,11 +23,10 @@ import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
-/**
- * TODO Sprint add-controllers.
- */
 @RestController
 @RequestMapping("/items")
 @RequiredArgsConstructor
@@ -39,8 +38,11 @@ public class ItemController {
 
     @GetMapping
     public List<ItemInfoDto> getAllUserItems(@RequestHeader(value = "X-Sharer-User-Id") long ownerId,
-                                             @RequestParam(defaultValue = "0") int from,
-                                             @RequestParam(defaultValue = "1") int size) {
+                                             @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+                                             @PositiveOrZero @RequestParam(defaultValue = "0") int size) {
+        if (size == 0) {
+            size = Integer.MAX_VALUE;
+        }
         log.info("Обработка запроса на получение всех вещей пользователя с id = {}", ownerId);
         List<ItemInfoDto> items = itemService.getItemsByOwnerId(ownerId, from, size);
         log.info("Получены все вещи пользователя с id = {}", ownerId);
@@ -58,8 +60,11 @@ public class ItemController {
 
     @GetMapping("/search")
     public List<ItemDto> searchItems(@RequestParam(value = "text") String text,
-                                     @RequestParam(defaultValue = "0") int from,
-                                     @RequestParam(defaultValue = "1") int size) {
+                                     @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+                                     @PositiveOrZero @RequestParam(defaultValue = "0") int size) {
+        if (size == 0) {
+            size = Integer.MAX_VALUE;
+        }
         log.info("Обработка запроса на выполнение поиска по строке {}", text);
         List<ItemDto> items = itemService.getItemsByNameOrDesc(text, from, size);
         log.info("Получен список длиной {}", items.size());

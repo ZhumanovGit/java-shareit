@@ -1,6 +1,9 @@
 package ru.practicum.shareit.booking.service;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +14,7 @@ import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
+import ru.practicum.shareit.booking.model.QBooking;
 import ru.practicum.shareit.booking.model.StateStatus;
 import ru.practicum.shareit.exception.model.BookingException;
 import ru.practicum.shareit.exception.model.NotFoundException;
@@ -19,6 +23,7 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import java.beans.Expression;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -99,31 +104,16 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingDto> getAllBookingsForUser(Long userId, StateStatus state, int from, int size) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
-        List<Booking> result;
+
+        BooleanExpression byBookerId = QBooking.booking.booker.id.eq(userId);
         Sort startDesc = Sort.by(Sort.Direction.DESC, "start");
-        LocalDateTime now = LocalDateTime.now();
-        switch (state) {
-            case ALL:
-                result = bookingRepository.findAllByBookerId(userId, startDesc);
-                break;
-            case PAST:
-                result = bookingRepository.findAllByBookerIdAndEndBefore(userId, now, startDesc);
-                break;
-            case CURRENT:
-                result = bookingRepository.findAllCurrentBookings(userId, startDesc);
-                break;
-            case FUTURE:
-                result = bookingRepository.findALlByBookerIdAndStartAfter(userId, now, startDesc);
-                break;
-            case WAITING:
-                result = bookingRepository.findAllByBookerIdAndStatusIs(userId, BookingStatus.WAITING);
-                break;
-            case REJECTED:
-                result = bookingRepository.findAllByBookerIdAndStatusIs(userId, BookingStatus.REJECTED);
-                break;
-            default:
-                throw new NotFoundException("Не найден параметр поиска");
+        BooleanExpression queryExpression = byBookerId.and(getBookingExpression(state));
+        int page = 0;
+        if (from >= size) {
+            page = (from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size;
         }
+        Page<Booking> result = bookingRepository.findAll(queryExpression, PageRequest.of(page, size, startDesc));
+
         return result.stream()
                 .map(mapper::bookingToBookingDto)
                 .collect(Collectors.toList());
@@ -134,37 +124,52 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingDto> getAllBookingForOwner(Long ownerId, StateStatus state, int from, int size) {
         userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
-        List<Item> items = itemRepository.findAllByOwnerId(ownerId);
+        List<Item> items = itemRepository.findALlByOwnerId(ownerId);
         if (items.isEmpty()) {
             throw new NotFoundException("Не найдены вещи для данного владельца");
         }
-        List<Booking> result;
+
+        BooleanExpression byItemOwnerId = QBooking.booking.item.owner.id.eq(ownerId);
         Sort startDesc = Sort.by(Sort.Direction.DESC, "start");
+        BooleanExpression queryExpression = byItemOwnerId.and(getBookingExpression(state));
+        int page = 0;
+        if (from >= size) {
+            page = (from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size;
+        }
+        Page<Booking> result = bookingRepository.findAll(queryExpression, PageRequest.of(page, size, startDesc));
+
+        return result.stream()
+                .map(mapper::bookingToBookingDto)
+                .collect(Collectors.toList());
+    }
+
+    private BooleanExpression getBookingExpression(StateStatus state) {
         LocalDateTime now = LocalDateTime.now();
+        BooleanExpression expression;
         switch (state) {
             case ALL:
-                result = bookingRepository.findAllByItemOwnerId(ownerId, startDesc);
+                expression = QBooking.booking.isNotNull();
                 break;
             case PAST:
-                result = bookingRepository.findAllByItemOwnerIdAndEndBefore(ownerId, now, startDesc);
+                expression = QBooking.booking.end.before(now);
                 break;
             case CURRENT:
-                result = bookingRepository.findAllCurrentBookingsForOwner(ownerId, startDesc);
+                expression = QBooking.booking.start.before(now)
+                        .and(QBooking.booking.end.after(now));
                 break;
             case FUTURE:
-                result = bookingRepository.findALlByItemOwnerIdAndStartAfter(ownerId, now, startDesc);
+                expression = QBooking.booking.start.after(now);
                 break;
             case WAITING:
-                result = bookingRepository.findAllByItemOwnerIdAndStatusIs(ownerId, BookingStatus.WAITING);
+                expression = QBooking.booking.status.eq(BookingStatus.WAITING);
                 break;
             case REJECTED:
-                result = bookingRepository.findAllByItemOwnerIdAndStatusIs(ownerId, BookingStatus.REJECTED);
+                expression = QBooking.booking.status.eq(BookingStatus.REJECTED);
                 break;
             default:
                 throw new NotFoundException("Не найден параметр поиска");
         }
-        return result.stream()
-                .map(mapper::bookingToBookingDto)
-                .collect(Collectors.toList());
+
+        return expression;
     }
 }
