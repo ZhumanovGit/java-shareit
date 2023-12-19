@@ -1,9 +1,11 @@
 package ru.practicum.shareit.comment.service;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.BookingRepository;
+import ru.practicum.shareit.booking.model.QBooking;
 import ru.practicum.shareit.comment.Comment;
 import ru.practicum.shareit.comment.CommentMapper;
 import ru.practicum.shareit.comment.CommentRepository;
@@ -37,10 +39,11 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new PostCommentException("Объект с id = " + itemId + " не найден"));
 
         LocalDateTime now = LocalDateTime.now();
+        BooleanExpression expression = QBooking.booking.booker.id.eq(authorId)
+                .and(QBooking.booking.item.id.eq(itemId))
+                .and(QBooking.booking.end.before(now));
         bookingRepository
-                .findFirstByBookerIdAndItemIdAndEndBefore(authorId,
-                        itemId,
-                        now,
+                .findFirstBy(expression,
                         Sort.by(Sort.Direction.DESC, "end"))
                 .orElseThrow(() -> new PostCommentException("Бронь с такими данными не найдена"));
 

@@ -13,4 +13,6 @@ public interface ItemRequestRepository extends JpaRepository<ItemRequest, Long> 
 
     List<ItemRequest> findAllByOwnerId(long ownerId, Sort sort);
     Page<ItemRequest> findAllByOwnerIdNot(long ownerId, Pageable pageable);
+
+    void deleteAllByOwnerId(long ownerId);
 }

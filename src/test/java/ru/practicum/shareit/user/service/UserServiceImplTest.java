@@ -2,9 +2,11 @@ package ru.practicum.shareit.user.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.internal.verification.AtMost;
 import ru.practicum.shareit.comment.CommentRepository;
 import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.ItemRequestRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.dto.UserCreateDto;
@@ -20,12 +22,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class UserServiceImplTest {
     UserRepository userRepository;
     ItemRepository itemRepository;
     CommentRepository commentRepository;
+    ItemRequestRepository requestRepository;
     UserServiceImpl service;
 
     UserMapper mapper;
@@ -35,8 +40,9 @@ class UserServiceImplTest {
         userRepository = mock(UserRepository.class);
         itemRepository = mock(ItemRepository.class);
         commentRepository = mock(CommentRepository.class);
+        requestRepository = mock(ItemRequestRepository.class);
         mapper = new UserMapper();
-        service = new UserServiceImpl(userRepository, itemRepository, commentRepository, mapper);
+        service = new UserServiceImpl(userRepository, itemRepository, commentRepository, requestRepository, mapper);
     }
 
     void assertEqualsUser(UserDto o1, UserDto o2) {
@@ -83,6 +89,17 @@ class UserServiceImplTest {
         assertEquals(user.getId(), updatedUser.getId());
         assertEquals(userUpdates.getName(), updatedUser.getName());
         assertEquals(userUpdates.getEmail(), updatedUser.getEmail());
+    }
+
+    @Test
+    public void patchUser_thenUserWasNotFound_thenThrowException() {
+        String expectedResponse = "Пользователя с id = 1 не существует";
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        Throwable throwable = assertThrows(NotFoundException.class,
+                () -> service.patchUser(1L, any(UserUpdateDto.class)));
+
+        assertEquals(expectedResponse, throwable.getMessage());
     }
 
     @Test
@@ -140,5 +157,28 @@ class UserServiceImplTest {
         List<UserDto> users = service.getUsers();
 
         assertEquals(3, users.size());
+    }
+
+    @Test
+    public void deleteUserById_whenCalled_thenDeleteUserWithHisObjects() {
+        long userId = 1L;
+
+        service.deleteUserById(userId);
+
+        verify(commentRepository, times(1)).deleteAllByAuthorId(userId);
+        verify(requestRepository, times(1)).deleteAllByOwnerId(userId);
+        verify(itemRepository, times(1)).deleteAllByOwnerId(userId);
+        verify(userRepository, times(1)).deleteById(userId);
+    }
+
+    @Test
+    public void deleteUsers_whenCalled_thenDeleteAllUserAndObjects() {
+
+        service.deleteUsers();
+
+        verify(commentRepository, times(1)).deleteAll();
+        verify(requestRepository, times(1)).deleteAll();
+        verify(itemRepository, times(1)).deleteAll();
+        verify(userRepository, times(1)).deleteAll();
     }
 }

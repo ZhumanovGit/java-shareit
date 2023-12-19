@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item.service;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,6 +13,7 @@ import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
+import ru.practicum.shareit.booking.model.QBooking;
 import ru.practicum.shareit.comment.Comment;
 import ru.practicum.shareit.comment.CommentMapper;
 import ru.practicum.shareit.comment.CommentRepository;
@@ -33,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +59,8 @@ public class ItemServiceImpl implements ItemService {
 
         Long requestId = dto.getRequestId();
         if (requestId != null) {
-            requestRepository.findById(requestId);
+            requestRepository.findById(requestId)
+                    .orElseThrow(() -> new NotFoundException("Запроса с id = " + requestId + " не существует"));
         }
 
         Item item = mapper.itemCreateDtoToItem(dto);
@@ -119,21 +123,23 @@ public class ItemServiceImpl implements ItemService {
         }
 
         LocalDateTime now = LocalDateTime.now();
+        BooleanExpression lastExpression = QBooking.booking.item.id.eq(item.getId())
+                .and(QBooking.booking.start.before(now))
+                .and(QBooking.booking.status.eq(BookingStatus.APPROVED));
         Booking previousBooking = bookingRepository
-                .findFirstByItemIdAndStartBeforeAndStatusIs(item.getId(),
-                        now,
-                        BookingStatus.APPROVED,
-                        Sort.by(Sort.Direction.DESC, "start"))
-                .orElse(null);
+                .findFirstBy(lastExpression,
+                        Sort.by(Sort.Direction.DESC, "start")).orElse(null);
         itemDto.setLastBooking(null);
         if (previousBooking != null) {
             itemDto.setLastBooking(bookingMapper.bookingToItemBookingDto(previousBooking));
         }
 
+        BooleanExpression nextExpression = QBooking.booking.item.id.eq(item.getId())
+                .and(QBooking.booking.start.after(now))
+                .and(QBooking.booking.status.eq(BookingStatus.REJECTED).isFalse());
+
         Booking futureBooking = bookingRepository
-                .findFirstByItemIdAndStartAfterAndStatusIsNot(item.getId(),
-                        now,
-                        BookingStatus.REJECTED,
+                .findFirstBy(nextExpression,
                         Sort.by(Sort.Direction.ASC, "start"))
                 .orElse(null);
         itemDto.setNextBooking(null);
@@ -159,10 +165,19 @@ public class ItemServiceImpl implements ItemService {
                 .map(Item::getId)
                 .collect(Collectors.toList());
         LocalDateTime now = LocalDateTime.now();
-        List<Booking> previousBookings = bookingRepository
-                .findAllByItemIdInAndStartBeforeAndStatusIs(itemIds, now, BookingStatus.APPROVED);
-        List<Booking> futureBookings = bookingRepository
-                .findAllByItemIdInAndStartAfterAndStatusIsNot(itemIds, now, BookingStatus.REJECTED);
+
+        BooleanExpression lastBookingsExpression = QBooking.booking.item.id.in(itemIds)
+                .and(QBooking.booking.start.before(now))
+                .and(QBooking.booking.status.eq(BookingStatus.APPROVED));
+        List<Booking> previousBookings = StreamSupport.stream(bookingRepository
+                        .findAll(lastBookingsExpression).spliterator(), false)
+                .collect(Collectors.toList());
+        BooleanExpression nextBookingsExpression = QBooking.booking.item.id.in(itemIds)
+                .and(QBooking.booking.start.after(now))
+                .and(QBooking.booking.status.eq(BookingStatus.REJECTED).isFalse());
+        List<Booking> futureBookings = StreamSupport.stream(bookingRepository
+                .findAll(nextBookingsExpression).spliterator(), false)
+                .collect(Collectors.toList());
         List<Comment> allComments = commentRepository.findAllByItemIdIn(itemIds,
                 Sort.by(Sort.Direction.ASC, "created"));
 

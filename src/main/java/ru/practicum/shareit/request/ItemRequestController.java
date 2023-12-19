@@ -56,7 +56,7 @@ public class ItemRequestController {
     }
 
     @GetMapping("/{requestId}")
-    public ItemRequestInfoDto getRequestById(@PathVariable int requestId,
+    public ItemRequestInfoDto getRequestById(@PathVariable long requestId,
                                              @RequestHeader("X-Sharer-User-Id") long userId) {
         log.info("Обработка запроса на получение обращения с id = {}", requestId);
         ItemRequestInfoDto result = service.getRequestById(requestId, userId);

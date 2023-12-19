@@ -1,11 +1,16 @@
 package ru.practicum.shareit.item.service;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
-import ru.practicum.shareit.booking.model.BookingStatus;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.comment.Comment;
 import ru.practicum.shareit.comment.CommentMapper;
 import ru.practicum.shareit.comment.CommentRepository;
 import ru.practicum.shareit.exception.model.NotFoundException;
@@ -16,11 +21,12 @@ import ru.practicum.shareit.item.dto.ItemInfoDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.ItemRequest;
+import ru.practicum.shareit.request.ItemRequestRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +42,7 @@ class ItemServiceImplTest {
     UserRepository userRepository;
     BookingRepository bookingRepository;
     CommentRepository commentRepository;
+    ItemRequestRepository requestRepository;
     ItemServiceImpl itemService;
     ItemMapper mapper;
     BookingMapper bookingMapper;
@@ -47,6 +54,7 @@ class ItemServiceImplTest {
         userRepository = mock(UserRepository.class);
         bookingRepository = mock(BookingRepository.class);
         commentRepository = mock(CommentRepository.class);
+        requestRepository = mock(ItemRequestRepository.class);
         mapper = new ItemMapper();
         bookingMapper = new BookingMapper();
         commentMapper = new CommentMapper();
@@ -54,6 +62,7 @@ class ItemServiceImplTest {
                 userRepository,
                 bookingRepository,
                 commentRepository,
+                requestRepository,
                 mapper,
                 bookingMapper,
                 commentMapper);
@@ -66,18 +75,15 @@ class ItemServiceImplTest {
     }
 
     @Test
-    public void createItem_whenItemIsValid_thenReturnNewItem() {
+    public void createItem_whenItemIsValidWithNoRequestId_thenReturnNewItem() {
         User expectedUser = User.builder()
                 .id(1L)
-                .name("name")
-                .email("name@e.mail")
                 .build();
         ItemCreateDto dto = ItemCreateDto.builder()
                 .name("name")
                 .description("description")
                 .available(true)
                 .build();
-        Item item = mapper.itemCreateDtoToItem(dto);
         Item expectedItem = Item.builder()
                 .id(1L)
                 .name("name")
@@ -90,6 +96,55 @@ class ItemServiceImplTest {
         ItemDto actual = itemService.createItem(dto, expectedUser.getId());
 
         assertEqualItem(mapper.itemToItemDto(expectedItem), actual);
+    }
+
+    @Test
+    public void createItem_whenItemIsValidWithRequestIdWasFound_thenReturnNewItemWithRequestId() {
+        User expectedUser = User.builder()
+                .id(1L)
+                .build();
+        ItemRequest request = ItemRequest.builder().id(1L).build();
+        ItemCreateDto dto = ItemCreateDto.builder()
+                .name("name")
+                .requestId(request.getId())
+                .description("description")
+                .available(true)
+                .build();
+        Item expectedItem = Item.builder()
+                .id(1L)
+                .name("name")
+                .description("description")
+                .available(true)
+                .requestId(request.getId())
+                .build();
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(expectedUser));
+        when(requestRepository.findById(request.getId())).thenReturn(Optional.of(request));
+        when(itemRepository.save(any())).thenReturn(expectedItem);
+
+        ItemDto actual = itemService.createItem(dto, expectedUser.getId());
+
+        assertEqualItem(mapper.itemToItemDto(expectedItem), actual);
+        assertEquals(request.getId(), actual.getRequestId());
+    }
+
+    @Test
+    public void createItem_whenItemIsValidWithRequestIdNotFound_thenThrowException() {
+        User expectedUser = User.builder()
+                .id(1L)
+                .build();
+        ItemCreateDto dto = ItemCreateDto.builder()
+                .name("name")
+                .requestId(1L)
+                .description("description")
+                .available(true)
+                .build();
+        when(userRepository.findById(expectedUser.getId())).thenReturn(Optional.of(expectedUser));
+        when(requestRepository.findById(any())).thenReturn(Optional.empty());
+        String expectedResponse = "Запроса с id = 1 не существует";
+
+        Throwable throwable = assertThrows(NotFoundException.class, () -> itemService.createItem(dto, expectedUser.getId()));
+
+        assertEquals(expectedResponse, throwable.getMessage());
     }
 
     @Test
@@ -179,7 +234,7 @@ class ItemServiceImplTest {
     }
 
     @Test
-    public void findById_whenOwnerItemWasFoundAndItemNotHaveBookings_returnItem() {
+    public void getItemById_whenOwnerItemWasFoundAndItemNotHaveBookingsAndNotHaveComments_returnItem() {
         User owner = User.builder().id(1L).build();
         Item item = Item.builder()
                 .id(1L)
@@ -190,18 +245,14 @@ class ItemServiceImplTest {
                 .build();
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
         when(commentRepository.findAllByItemId(item.getId(),
-                Sort.by(Sort.Direction.ASC, "created"))).thenReturn(new ArrayList<>());
+                Sort.by(Sort.Direction.ASC, "created"))).thenReturn(Collections.emptyList());
         when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
         when(bookingRepository
-                .findFirstByItemIdAndStartBeforeAndStatusIs(item.getId(),
-                        LocalDateTime.now(),
-                        BookingStatus.APPROVED,
-                        Sort.by(Sort.Direction.DESC, "start"))).thenReturn(Optional.empty());
+                .findFirstBy(any(BooleanExpression.class),
+                        any(Sort.class))).thenReturn(Optional.empty());
         when(bookingRepository
-                .findFirstByItemIdAndStartAfterAndStatusIsNot(item.getId(),
-                        LocalDateTime.now(),
-                        BookingStatus.REJECTED,
-                        Sort.by(Sort.Direction.ASC, "start"))).thenReturn(Optional.empty());
+                .findFirstBy(any(BooleanExpression.class),
+                        any(Sort.class))).thenReturn(Optional.empty());
 
         ItemDto actualItem = itemService.getItemById(item.getId(), owner.getId());
 
@@ -209,7 +260,7 @@ class ItemServiceImplTest {
     }
 
     @Test
-    public void findById_whenItemWasFoundFromNotOwner_returnItem() {
+    public void getItemById_whenOwnerItemWasFoundAndItemHaveBookingsAndComments_returnItem() {
         User owner = User.builder().id(1L).build();
         Item item = Item.builder()
                 .id(1L)
@@ -218,28 +269,75 @@ class ItemServiceImplTest {
                 .available(true)
                 .owner(owner)
                 .build();
-        when(userRepository.findById(25L)).thenReturn(Optional.of(owner));
+        Booking last = Booking.builder().id(1L).booker(User.builder().id(2L).build()).build();
+        Booking next = Booking.builder().id(2L).booker(User.builder().id(2L).build()).build();
+        Comment comment = Comment.builder().id(1L).author(User.builder().name("author").build()).build();
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
         when(commentRepository.findAllByItemId(item.getId(),
-                Sort.by(Sort.Direction.ASC, "created"))).thenReturn(new ArrayList<>());
+                Sort.by(Sort.Direction.ASC, "created"))).thenReturn(List.of(comment));
         when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
         when(bookingRepository
-                .findFirstByItemIdAndStartBeforeAndStatusIs(item.getId(),
-                        LocalDateTime.now(),
-                        BookingStatus.APPROVED,
-                        Sort.by(Sort.Direction.DESC, "start"))).thenReturn(Optional.empty());
-        when(bookingRepository
-                .findFirstByItemIdAndStartAfterAndStatusIsNot(item.getId(),
-                        LocalDateTime.now(),
-                        BookingStatus.REJECTED,
-                        Sort.by(Sort.Direction.ASC, "start"))).thenReturn(Optional.empty());
+                .findFirstBy(any(BooleanExpression.class),
+                        any(Sort.class))).thenReturn(Optional.of(last));
 
-        ItemDto actualItem = itemService.getItemById(item.getId(), 25L);
+        ItemDto actualItem = itemService.getItemById(item.getId(), owner.getId());
 
         assertEqualItem(mapper.itemToItemDto(item), actualItem);
+        assertEquals(last.getId(), actualItem.getLastBooking().getId());
+        assertEquals(1, actualItem.getComments().size());
     }
 
     @Test
-    public void findById_whenItemNotFound_thenReturnItemNotFoundException() {
+    public void getItemById_whenUserAndItemAndBookingsWasFoundAndCommentsWasNot_thenReturnItem() {
+        User owner = User.builder().id(1L).build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("asd")
+                .description("testDesc")
+                .available(true)
+                .owner(owner)
+                .build();
+        Booking last = Booking.builder().id(1L).booker(User.builder().id(2L).build()).build();
+        Booking next = Booking.builder().id(2L).booker(User.builder().id(2L).build()).build();
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        when(commentRepository.findAllByItemId(item.getId(),
+                Sort.by(Sort.Direction.ASC, "created"))).thenReturn(Collections.emptyList());
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+        when(bookingRepository
+                .findFirstBy(any(BooleanExpression.class),
+                        any(Sort.class))).thenReturn(Optional.of(last));
+
+        ItemDto actualItem = itemService.getItemById(item.getId(), owner.getId());
+
+        assertEqualItem(mapper.itemToItemDto(item), actualItem);
+        assertEquals(last.getId(), actualItem.getLastBooking().getId());
+        assertEquals(0, actualItem.getComments().size());
+    }
+
+    @Test
+    public void getItemById_whenRequesterIsNotOwner_thenReturnItemWithoutBookings() {
+        User requester = User.builder().id(2L).build();
+        User owner = User.builder().id(1L).build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("asd")
+                .description("testDesc")
+                .available(true)
+                .owner(owner)
+                .build();
+        when(userRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
+        when(commentRepository.findAllByItemId(item.getId(),
+                Sort.by(Sort.Direction.ASC, "created"))).thenReturn(Collections.emptyList());
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+
+        ItemDto actualItem = itemService.getItemById(item.getId(), requester.getId());
+
+        assertEqualItem(mapper.itemToItemDto(item), actualItem);
+        assertEquals(0, actualItem.getComments().size());
+    }
+
+    @Test
+    public void getItemById_whenItemNotFound_thenReturnItemNotFoundException() {
         String expectedResponse = "объект с id = 3 не найден";
         User user = User.builder().id(1L).build();
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
@@ -250,7 +348,7 @@ class ItemServiceImplTest {
     }
 
     @Test
-    public void findById_whenRequesterNotFound_thenThrowNotFoundException() {
+    public void getItemById_whenRequesterNotFound_thenThrowNotFoundException() {
         String expectedResponse = "Пользователь с id = 3 не найден";
         when(userRepository.findById(3L)).thenReturn(Optional.empty());
 
@@ -264,9 +362,20 @@ class ItemServiceImplTest {
         String expectedResponse = "Пользователь с id = 5 не найден";
         when(userRepository.findById(5L)).thenReturn(Optional.empty());
 
-        Throwable throwable = assertThrows(NotFoundException.class, () -> itemService.getItemsByOwnerId(5L));
+        Throwable throwable = assertThrows(NotFoundException.class, () -> itemService.getItemsByOwnerId(5L, 0, 10));
 
         assertEquals(expectedResponse, throwable.getMessage());
+    }
+
+    @Test
+    public void getItemsByOwnerId_whenItemsWasNotFound_thenReturnEmptyList() {
+        User user = User.builder().id(1L).build();
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(itemRepository.findAllByOwnerId(anyLong(), any())).thenReturn(Page.empty());
+
+        List<ItemInfoDto> dto = itemService.getItemsByOwnerId(user.getId(), 0, 1);
+
+        assertEquals(0, dto.size());
     }
 
     @Test
@@ -293,21 +402,19 @@ class ItemServiceImplTest {
                 .available(true)
                 .owner(owner)
                 .build();
+        PageRequest request = PageRequest.of(0, 10);
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
-        when(itemRepository.findAllByOwnerId(owner.getId())).thenReturn(List.of(item1, item2, item3));
-        when(bookingRepository.findAllByItemIdInAndStartBeforeAndStatusIs(List.of(1L, 2L, 3L),
-                LocalDateTime.now(), BookingStatus.APPROVED)).thenReturn(new ArrayList<>());
-        when(bookingRepository.findAllByItemIdInAndStartAfterAndStatusIsNot(List.of(1L, 2L, 3L),
-                LocalDateTime.now(), BookingStatus.REJECTED)).thenReturn(new ArrayList<>());
+        when(itemRepository.findAllByOwnerId(owner.getId(), request)).thenReturn(new PageImpl<>(List.of(item1, item2, item3)));
+        when(bookingRepository.findAll(any(BooleanExpression.class))).thenReturn(Collections.emptyList());
 
-        List<ItemInfoDto> items = itemService.getItemsByOwnerId(owner.getId());
+        List<ItemInfoDto> items = itemService.getItemsByOwnerId(owner.getId(), 0, 10);
 
         assertEquals(3, items.size());
     }
 
     @Test
     public void getItemsByNameOrDesc_whenStringIsBlank_thenReturnEmptyList() {
-        List<ItemDto> items = itemService.getItemsByNameOrDesc("");
+        List<ItemDto> items = itemService.getItemsByNameOrDesc("", 0, 10);
 
         assertEquals(0, items.size());
     }
@@ -336,9 +443,10 @@ class ItemServiceImplTest {
                 .available(true)
                 .owner(owner)
                 .build();
-        when(itemRepository.findAllByNameOrDesc("tes")).thenReturn(List.of(item1, item2, item3));
+        PageRequest request = PageRequest.of(0, 10);
+        when(itemRepository.findAllByNameOrDesc("tes", request)).thenReturn(new PageImpl<>(List.of(item1, item2, item3)));
 
-        List<ItemDto> items = itemService.getItemsByNameOrDesc("tEs");
+        List<ItemDto> items = itemService.getItemsByNameOrDesc("tEs", 0, 10);
 
         assertEquals(3, items.size());
     }

@@ -15,12 +15,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 public class ItemRequestRepositoryTest {
-
     @Autowired
     private ItemRequestRepository itemRequestRepository;
 
     @Test
-    @Sql({"/item-request-storage-test.sql"})
+    @Sql({"../sql-scripts/item-request-storage-test.sql"})
     public void findAllByOwnerId_whenDbIsFilled_thenReturnListOfRequests() {
         long ownerId = 2L;
         Sort sort = Sort.by(Sort.Direction.DESC, "created");
