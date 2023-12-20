@@ -123,23 +123,21 @@ public class ItemServiceImpl implements ItemService {
         }
 
         LocalDateTime now = LocalDateTime.now();
-        BooleanExpression lastExpression = QBooking.booking.item.id.eq(item.getId())
-                .and(QBooking.booking.start.before(now))
-                .and(QBooking.booking.status.eq(BookingStatus.APPROVED));
         Booking previousBooking = bookingRepository
-                .findFirstBy(lastExpression,
-                        Sort.by(Sort.Direction.DESC, "start")).orElse(null);
+                .findFirstByItemIdAndStartBeforeAndStatusIs(item.getId(),
+                        now,
+                        BookingStatus.APPROVED,
+                        Sort.by(Sort.Direction.DESC, "start"))
+                .orElse(null);
         itemDto.setLastBooking(null);
         if (previousBooking != null) {
             itemDto.setLastBooking(bookingMapper.bookingToItemBookingDto(previousBooking));
         }
 
-        BooleanExpression nextExpression = QBooking.booking.item.id.eq(item.getId())
-                .and(QBooking.booking.start.after(now))
-                .and(QBooking.booking.status.eq(BookingStatus.REJECTED).isFalse());
-
         Booking futureBooking = bookingRepository
-                .findFirstBy(nextExpression,
+                .findFirstByItemIdAndStartAfterAndStatusIsNot(item.getId(),
+                        now,
+                        BookingStatus.REJECTED,
                         Sort.by(Sort.Direction.ASC, "start"))
                 .orElse(null);
         itemDto.setNextBooking(null);
@@ -174,9 +172,9 @@ public class ItemServiceImpl implements ItemService {
                 .collect(Collectors.toList());
         BooleanExpression nextBookingsExpression = QBooking.booking.item.id.in(itemIds)
                 .and(QBooking.booking.start.after(now))
-                .and(QBooking.booking.status.eq(BookingStatus.REJECTED).isFalse());
+                .and(QBooking.booking.status.ne(BookingStatus.REJECTED));
         List<Booking> futureBookings = StreamSupport.stream(bookingRepository
-                .findAll(nextBookingsExpression).spliterator(), false)
+                        .findAll(nextBookingsExpression).spliterator(), false)
                 .collect(Collectors.toList());
         List<Comment> allComments = commentRepository.findAllByItemIdIn(itemIds,
                 Sort.by(Sort.Direction.ASC, "created"));

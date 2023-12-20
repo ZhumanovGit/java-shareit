@@ -23,7 +23,6 @@ import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
@@ -96,13 +95,6 @@ public class ItemController {
         log.info("Удалена вешь с id = {}", itemId);
     }
 
-    @DeleteMapping
-    public void deleteItems() {
-        log.info("Обработка запроса на удаление всех вещей");
-        itemService.deleteItems();
-        log.info("Все вещи удалены");
-    }
-
     @PostMapping("/{itemId}/comment")
     public CommentDto postComment(@RequestHeader("X-Sharer-User-Id") long authorId,
                                   @PathVariable long itemId,
@@ -112,6 +104,4 @@ public class ItemController {
         log.info("Создан комментарий с id = {}", comment.getId());
         return comment;
     }
-
-
 }

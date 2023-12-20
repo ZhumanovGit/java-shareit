@@ -5,9 +5,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
-import org.springframework.data.repository.query.Param;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,4 +25,14 @@ public interface BookingRepository extends JpaRepository<Booking, Long>, Queryds
     List<Booking> findAllCurrentBookingsForItem(long itemId);
 
     Optional<Booking> findFirstBy(BooleanExpression e, Sort sort);
+
+    Optional<Booking> findFirstByItemIdAndStartBeforeAndStatusIs(Long id,
+                                                                 LocalDateTime now,
+                                                                 BookingStatus bookingStatus,
+                                                                 Sort start);
+
+    Optional<Booking> findFirstByItemIdAndStartAfterAndStatusIsNot(Long id,
+                                                                   LocalDateTime now,
+                                                                   BookingStatus bookingStatus,
+                                                                   Sort start);
 }

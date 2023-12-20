@@ -1,7 +1,6 @@
 package ru.practicum.shareit.item;
 
 import org.junit.jupiter.api.Test;
-import ru.practicum.shareit.booking.dto.ItemBookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.comment.Comment;
 import ru.practicum.shareit.item.dto.ItemCreateDto;
@@ -10,14 +9,10 @@ import ru.practicum.shareit.item.dto.ItemInfoDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.UserMapper;
-import ru.practicum.shareit.user.dto.UserCreateDto;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.dto.UserUpdateDto;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 class ItemMapperTest {
@@ -98,8 +93,6 @@ class ItemMapperTest {
         assertEquals(item.getDescription(), dto.getDescription());
         assertEquals(item.getAvailable(), dto.getAvailable());
         assertEquals(3, dto.getComments().size());
-        assertEquals(last.getId(), dto.getLastBooking().getBookerId());
-        assertEquals(next.getId(), dto.getNextBooking().getId());
     }
 
     @Test

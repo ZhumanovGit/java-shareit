@@ -30,7 +30,7 @@ public class ItemRequestController {
 
     @PostMapping
     public ItemRequestDto createRequest(@RequestHeader("X-Sharer-User-Id") long userId,
-                                            @Valid @RequestBody ItemRequestCreateDto dto) {
+                                        @Valid @RequestBody ItemRequestCreateDto dto) {
         log.info("Обработка запроса на создание обращения");
         ItemRequestDto result = service.createItemRequest(dto, userId);
         log.info("Создано новое обращение с id = {}", result.getId());

@@ -9,7 +9,7 @@ import ru.practicum.shareit.request.dto.ItemRequestInfoDto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class RequestMapperTest {
     ItemMapper itemMapper = new ItemMapper();

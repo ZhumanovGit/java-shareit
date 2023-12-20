@@ -3,7 +3,6 @@ package ru.practicum.shareit.request;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +16,10 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -96,12 +98,12 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         List<Item> items = itemRepository.findAllByRequestIdIn(requestIds);
 
         Map<Long, List<Item>> requestItemsMap = new HashMap<>();
-        for(Item item : items) {
+        for (Item item : items) {
             requestItemsMap.computeIfAbsent(item.getRequestId(), k -> new ArrayList<>()).add(item);
         }
 
         List<ItemRequestInfoDto> result = new ArrayList<>();
-        for(ItemRequest request : requests) {
+        for (ItemRequest request : requests) {
             Long requestId = request.getId();
             List<Item> requestItems = requestItemsMap.getOrDefault(requestId, new ArrayList<>());
             result.add(mapper.itemRequestToInfoDto(request, requestItems));

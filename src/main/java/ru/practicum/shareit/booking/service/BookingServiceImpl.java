@@ -120,7 +120,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookingDto> getAllBookingForOwner(Long ownerId, StateStatus state, int from, int size) {
+    public List<BookingDto> getAllBookingsForOwner(Long ownerId, StateStatus state, int from, int size) {
         userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
         List<Item> items = itemRepository.findALlByOwnerId(ownerId);

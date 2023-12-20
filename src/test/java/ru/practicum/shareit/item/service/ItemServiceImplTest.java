@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.comment.Comment;
 import ru.practicum.shareit.comment.CommentMapper;
 import ru.practicum.shareit.comment.CommentRepository;
@@ -26,6 +27,7 @@ import ru.practicum.shareit.request.ItemRequestRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -251,8 +253,17 @@ class ItemServiceImplTest {
                 .findFirstBy(any(BooleanExpression.class),
                         any(Sort.class))).thenReturn(Optional.empty());
         when(bookingRepository
-                .findFirstBy(any(BooleanExpression.class),
-                        any(Sort.class))).thenReturn(Optional.empty());
+                .findFirstByItemIdAndStartBeforeAndStatusIs(anyLong(),
+                        any(LocalDateTime.class),
+                        any(BookingStatus.class),
+                        any(Sort.class)))
+                .thenReturn(Optional.empty());
+        when(bookingRepository
+                .findFirstByItemIdAndStartAfterAndStatusIsNot(anyLong(),
+                        any(LocalDateTime.class),
+                        any(BookingStatus.class),
+                        any(Sort.class)))
+                .thenReturn(Optional.empty());
 
         ItemDto actualItem = itemService.getItemById(item.getId(), owner.getId());
 
@@ -277,8 +288,17 @@ class ItemServiceImplTest {
                 Sort.by(Sort.Direction.ASC, "created"))).thenReturn(List.of(comment));
         when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
         when(bookingRepository
-                .findFirstBy(any(BooleanExpression.class),
-                        any(Sort.class))).thenReturn(Optional.of(last));
+                .findFirstByItemIdAndStartBeforeAndStatusIs(anyLong(),
+                        any(LocalDateTime.class),
+                        any(BookingStatus.class),
+                        any(Sort.class)))
+                .thenReturn(Optional.of(last));
+        when(bookingRepository
+                .findFirstByItemIdAndStartAfterAndStatusIsNot(anyLong(),
+                        any(LocalDateTime.class),
+                        any(BookingStatus.class),
+                        any(Sort.class)))
+                .thenReturn(Optional.of(next));
 
         ItemDto actualItem = itemService.getItemById(item.getId(), owner.getId());
 
@@ -304,8 +324,17 @@ class ItemServiceImplTest {
                 Sort.by(Sort.Direction.ASC, "created"))).thenReturn(Collections.emptyList());
         when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
         when(bookingRepository
-                .findFirstBy(any(BooleanExpression.class),
-                        any(Sort.class))).thenReturn(Optional.of(last));
+                .findFirstByItemIdAndStartBeforeAndStatusIs(anyLong(),
+                        any(LocalDateTime.class),
+                        any(BookingStatus.class),
+                        any(Sort.class)))
+                .thenReturn(Optional.of(last));
+        when(bookingRepository
+                .findFirstByItemIdAndStartAfterAndStatusIsNot(anyLong(),
+                        any(LocalDateTime.class),
+                        any(BookingStatus.class),
+                        any(Sort.class)))
+                .thenReturn(Optional.of(next));
 
         ItemDto actualItem = itemService.getItemById(item.getId(), owner.getId());
 

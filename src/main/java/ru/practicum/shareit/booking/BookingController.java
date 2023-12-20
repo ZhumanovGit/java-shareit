@@ -16,7 +16,6 @@ import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.StateStatus;
 import ru.practicum.shareit.booking.service.BookingService;
-import ru.practicum.shareit.exception.model.BookingException;
 
 import javax.validation.Valid;
 import javax.validation.constraints.PositiveOrZero;
@@ -88,7 +87,7 @@ public class BookingController {
 
         StateStatus value = StateStatus.getFromString(state);
         log.info("Обработка запроса на получение всех бронирований пользователя с id = {}, параметр поиска: {}", ownerId, value);
-        List<BookingDto> bookings = bookingService.getAllBookingForOwner(ownerId, value, from, size);
+        List<BookingDto> bookings = bookingService.getAllBookingsForOwner(ownerId, value, from, size);
         log.info("Получен список длиной {}", bookings.size());
         return bookings;
 

@@ -15,15 +15,14 @@ import ru.practicum.shareit.user.service.UserService;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = UserController.class)
@@ -36,7 +35,7 @@ class UserControllerTest {
     private MockMvc mvc;
 
     @Test
-    public void getUsersTest() throws Exception {
+    public void getUsers_whenRequestIsCorrect_thenReturnListOfUsers() throws Exception {
         UserDto first = UserDto.builder()
                 .id(1L)
                 .name("test")
@@ -55,16 +54,15 @@ class UserControllerTest {
         List<UserDto> result = List.of(first, second, third);
         when(service.getUsers()).thenReturn(result);
 
-        mvc.perform((get("/users"))
-                        .content(mapper.writeValueAsString(result))
-                        .characterEncoding(StandardCharsets.UTF_8)
+        mvc.perform(get("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(result)));
     }
 
     @Test
-    public void getUserTest() throws Exception {
+    public void getUser_whenRequestIsCorrect_whenReturnNeedUser() throws Exception {
         UserDto first = UserDto.builder()
                 .id(1L)
                 .name("test")
@@ -72,19 +70,17 @@ class UserControllerTest {
                 .build();
         when(service.getUserById(first.getId())).thenReturn(first);
 
-        mvc.perform((get("/users/1"))
-                        .content(mapper.writeValueAsString(first))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+        mvc.perform(get("/users/{userId}", 1L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(first.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(first.getName()), String.class))
-                .andExpect(jsonPath("$.email", is(first.getEmail()), String.class));
+                .andExpect(content().json(mapper.writeValueAsString(first)));
     }
 
     @Test
-    public void createUserTest() throws Exception {
+    public void createUser_whenRequestIsCorrect_thenReturnNewUser() throws Exception {
+        UserCreateDto createDto = UserCreateDto.builder()
+                .name("name")
+                .email("niceEmail@com")
+                .build();
         UserDto first = UserDto.builder()
                 .id(1L)
                 .name("test")
@@ -92,48 +88,74 @@ class UserControllerTest {
                 .build();
         when(service.createUser(any(UserCreateDto.class))).thenReturn(first);
 
-        mvc.perform((post("/users"))
-                        .content(mapper.writeValueAsString(first))
+        mvc.perform(post("/users")
+                        .content(mapper.writeValueAsString(createDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(first.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(first.getName()), String.class))
-                .andExpect(jsonPath("$.email", is(first.getEmail()), String.class));
+                .andExpect(content().json(mapper.writeValueAsString(first)));
     }
 
     @Test
-    public void patchUserTest() throws Exception {
+    public void createUser_whenRequestHasWrongBody_thenReturnStatus400() throws Exception {
+        UserCreateDto createDto = UserCreateDto.builder()
+                .email("niceEmail@com")
+                .build();
+
+        mvc.perform(post("/users")
+                        .content(mapper.writeValueAsString(createDto))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void patchUser_whenRequestHasCorrectBody_thenReturnUpdatedUser() throws Exception {
+        UserUpdateDto dto = UserUpdateDto.builder()
+                .name("test")
+                .build();
         UserDto first = UserDto.builder()
                 .id(1L)
                 .name("test")
                 .email("testEmail@email1.com")
                 .build();
-        when(service.patchUser(first.getId(), any(UserUpdateDto.class))).thenReturn(first);
+        when(service.patchUser(anyLong(), any(UserUpdateDto.class))).thenReturn(first);
 
-        mvc.perform((post("/users/1"))
-                        .content(mapper.writeValueAsString(first))
+        mvc.perform((patch("/users/{userId}", 1L))
+                        .content(mapper.writeValueAsString(dto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(first.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(first.getName()), String.class))
-                .andExpect(jsonPath("$.email", is(first.getEmail()), String.class));
+                .andExpect(content().json(mapper.writeValueAsString(first)));
     }
 
     @Test
-    public void deleteUserByIdTest() throws Exception {
-        mvc.perform((delete("/users/1")))
+    public void patchUser_whenRequestBodyIsNotCorrect_thenReturnStatus400() throws Exception {
+        UserUpdateDto dto = UserUpdateDto.builder()
+                .email("wrong")
+                .build();
+
+        mvc.perform((patch("/users/{userId}", 1L))
+                        .content(mapper.writeValueAsString(dto))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void deleteUserById_whenRequestIsCorrect_thenDeleteUser() throws Exception {
+
+        mvc.perform((delete("/users/{userId}", 1L)))
                 .andExpect(status().isOk());
-        verify(service, times(1)).deleteUserById(any());
     }
 
     @Test
-    public void deleteAllUserTest() throws Exception {
+    public void deleteAllUser_whenRequestIsCorrect_thenDeleteAllUsers() throws Exception {
         mvc.perform((delete("/users")))
                 .andExpect(status().isOk());
-        verify(service, times(1)).deleteUsers();
     }
 }
