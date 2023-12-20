@@ -17,6 +17,7 @@ import ru.practicum.shareit.booking.model.QBooking;
 import ru.practicum.shareit.comment.Comment;
 import ru.practicum.shareit.comment.CommentMapper;
 import ru.practicum.shareit.comment.CommentRepository;
+import ru.practicum.shareit.comment.QComment;
 import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.ItemMapper;
 import ru.practicum.shareit.item.dto.ItemCreateDto;
@@ -176,7 +177,8 @@ public class ItemServiceImpl implements ItemService {
         List<Booking> futureBookings = StreamSupport.stream(bookingRepository
                         .findAll(nextBookingsExpression).spliterator(), false)
                 .collect(Collectors.toList());
-        List<Comment> allComments = commentRepository.findAllByItemIdIn(itemIds,
+        BooleanExpression commentExpression = QComment.comment.item.id.in(itemIds);
+        List<Comment> allComments = (List<Comment>) commentRepository.findAll(commentExpression,
                 Sort.by(Sort.Direction.ASC, "created"));
 
         Map<Long, Booking> itemsLastBookings = new HashMap<>();

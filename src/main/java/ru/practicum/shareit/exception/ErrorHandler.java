@@ -10,7 +10,6 @@ import ru.practicum.shareit.exception.model.BookingException;
 import ru.practicum.shareit.exception.model.ExceptionResponse;
 import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.exception.model.PostCommentException;
-import ru.practicum.shareit.exception.model.UserEmailIsAlreadyExists;
 
 import javax.validation.ConstraintViolationException;
 import java.io.PrintWriter;
@@ -44,13 +43,6 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ExceptionResponse handleNotFoundException(final NotFoundException e) {
         log.warn("NotFoundException, {}", e.getMessage());
-        return new ExceptionResponse(e.getMessage());
-    }
-
-    @ExceptionHandler(UserEmailIsAlreadyExists.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ExceptionResponse handleUserEmailIsAlreadyExists(final UserEmailIsAlreadyExists e) {
-        log.warn("UserEmailIsAlreadyExists, {}", e.getMessage());
         return new ExceptionResponse(e.getMessage());
     }
 
