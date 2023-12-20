@@ -11,7 +11,7 @@ import ru.practicum.shareit.user.User;
 
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BookingMapperTest {
     BookingMapper bookingMapper = new BookingMapper();
@@ -19,8 +19,8 @@ class BookingMapperTest {
     @Test
     public void bookingCreateDtoToBookingTest() {
         BookingCreateDto dto = BookingCreateDto.builder()
-                .start(LocalDateTime.of(2024, 1, 1,1,1))
-                .end(LocalDateTime.of(2024, 2, 1,1,1))
+                .start(LocalDateTime.of(2024, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2024, 2, 1, 1, 1))
                 .build();
 
         Booking result = bookingMapper.bookingCreateDtoToBooking(dto);
@@ -40,8 +40,8 @@ class BookingMapperTest {
                 .build();
         Booking booking = Booking.builder()
                 .id(1L)
-                .start(LocalDateTime.of(2024, 1, 1,1,1))
-                .end(LocalDateTime.of(2024, 2, 1,1,1))
+                .start(LocalDateTime.of(2024, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2024, 2, 1, 1, 1))
                 .item(item)
                 .booker(booker)
                 .status(BookingStatus.APPROVED)
@@ -67,8 +67,8 @@ class BookingMapperTest {
                 .build();
         Booking booking = Booking.builder()
                 .id(1L)
-                .start(LocalDateTime.of(2024, 1, 1,1,1))
-                .end(LocalDateTime.of(2024, 2, 1,1,1))
+                .start(LocalDateTime.of(2024, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2024, 2, 1, 1, 1))
                 .item(item)
                 .booker(booker)
                 .status(BookingStatus.APPROVED)

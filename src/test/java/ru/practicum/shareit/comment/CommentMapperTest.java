@@ -8,7 +8,7 @@ import ru.practicum.shareit.user.User;
 
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CommentMapperTest {
     CommentMapper mapper = new CommentMapper();

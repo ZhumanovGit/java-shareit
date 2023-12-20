@@ -18,6 +18,8 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -98,8 +100,8 @@ class CommentServiceImplTest {
         String expectedResponse = "Бронь с такими данными не найдена";
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
-        when(bookingRepository.findFirstBy(any(BooleanExpression.class), any(Sort.class)))
-                .thenThrow(new PostCommentException("Бронь с такими данными не найдена"));
+        when(bookingRepository.findAll(any(BooleanExpression.class), any(Sort.class)))
+                .thenReturn(Collections.emptyList());
 
         Throwable throwable = assertThrows(PostCommentException.class,
                 () -> service.createNewComment(createDto, item.getId(), user.getId()));
@@ -130,8 +132,8 @@ class CommentServiceImplTest {
                 .build();
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
-        when(bookingRepository.findFirstBy(any(BooleanExpression.class), any(Sort.class)))
-                .thenReturn(Optional.of(booking));
+        when(bookingRepository.findAll(any(BooleanExpression.class), any(Sort.class)))
+                .thenReturn(List.of(booking));
         when(commentRepository.save(any(Comment.class))).thenReturn(result);
 
         CommentDto dto = service.createNewComment(createDto, item.getId(), user.getId());

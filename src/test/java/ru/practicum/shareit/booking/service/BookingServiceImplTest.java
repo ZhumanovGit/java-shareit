@@ -404,7 +404,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    public void getAllBookingsForUser_whenBookingsWasFound_thenReturnListOfBookings() {
+    public void getAllBookingsForUser_whenBookingsWasFoundForALL_thenReturnListOfBookings() {
         User booker = User.builder().id(1L).build();
         Item item = Item.builder()
                 .id(1L)
@@ -429,6 +429,156 @@ class BookingServiceImplTest {
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
 
         List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.ALL, 0, 5);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void getAllBookingsForUser_whenBookingsWasFoundForCurrent_thenReturnListOfBookings() {
+        User booker = User.builder().id(1L).build();
+        Item item = Item.builder()
+                .id(1L)
+                .build();
+        Booking first = Booking.builder()
+                .id(1L)
+                .start(LocalDateTime.of(2023, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2023, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        Booking second = Booking.builder()
+                .id(2L)
+                .start(LocalDateTime.of(2022, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2022, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
+        when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
+
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.CURRENT, 0, 5);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void getAllBookingsForUser_whenBookingsWasFoundForPast_thenReturnListOfBookings() {
+        User booker = User.builder().id(1L).build();
+        Item item = Item.builder()
+                .id(1L)
+                .build();
+        Booking first = Booking.builder()
+                .id(1L)
+                .start(LocalDateTime.of(2023, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2023, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        Booking second = Booking.builder()
+                .id(2L)
+                .start(LocalDateTime.of(2022, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2022, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
+        when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
+
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.PAST, 0, 5);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void getAllBookingsForUser_whenBookingsWasFoundForFuture_thenReturnListOfBookings() {
+        User booker = User.builder().id(1L).build();
+        Item item = Item.builder()
+                .id(1L)
+                .build();
+        Booking first = Booking.builder()
+                .id(1L)
+                .start(LocalDateTime.of(2023, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2023, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        Booking second = Booking.builder()
+                .id(2L)
+                .start(LocalDateTime.of(2022, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2022, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
+        when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
+
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.FUTURE, 0, 5);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void getAllBookingsForUser_whenBookingsWasFoundForWaiting_thenReturnListOfBookings() {
+        User booker = User.builder().id(1L).build();
+        Item item = Item.builder()
+                .id(1L)
+                .build();
+        Booking first = Booking.builder()
+                .id(1L)
+                .start(LocalDateTime.of(2023, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2023, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        Booking second = Booking.builder()
+                .id(2L)
+                .start(LocalDateTime.of(2022, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2022, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
+        when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
+
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.WAITING, 0, 5);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void getAllBookingsForUser_whenBookingsWasFoundForRejected_thenReturnListOfBookings() {
+        User booker = User.builder().id(1L).build();
+        Item item = Item.builder()
+                .id(1L)
+                .build();
+        Booking first = Booking.builder()
+                .id(1L)
+                .start(LocalDateTime.of(2023, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2023, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        Booking second = Booking.builder()
+                .id(2L)
+                .start(LocalDateTime.of(2022, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2022, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
+        when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
+
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.REJECTED, 0, 5);
 
         assertEquals(2, result.size());
     }
@@ -473,7 +623,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    public void getAllBookingsForOwner_whenBookingsWasFound_thenReturnListOfBookings() {
+    public void getAllBookingsForOwner_whenBookingsWasFoundForALL_thenReturnListOfBookings() {
         User booker = User.builder().id(1L).build();
         Item item = Item.builder()
                 .id(1L)
@@ -499,6 +649,161 @@ class BookingServiceImplTest {
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
 
         List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.ALL, 0, 5);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void getAllBookingsForOwner_whenBookingsWasFoundForCurrent_thenReturnListOfBookings() {
+        User booker = User.builder().id(1L).build();
+        Item item = Item.builder()
+                .id(1L)
+                .build();
+        Booking first = Booking.builder()
+                .id(1L)
+                .start(LocalDateTime.of(2023, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2023, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        Booking second = Booking.builder()
+                .id(2L)
+                .start(LocalDateTime.of(2022, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2022, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
+        when(itemRepository.findALlByOwnerId(anyLong())).thenReturn(List.of(item));
+        when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
+
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.CURRENT, 0, 5);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void getAllBookingsForOwner_whenBookingsWasFoundForPast_thenReturnListOfBookings() {
+        User booker = User.builder().id(1L).build();
+        Item item = Item.builder()
+                .id(1L)
+                .build();
+        Booking first = Booking.builder()
+                .id(1L)
+                .start(LocalDateTime.of(2023, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2023, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        Booking second = Booking.builder()
+                .id(2L)
+                .start(LocalDateTime.of(2022, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2022, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
+        when(itemRepository.findALlByOwnerId(anyLong())).thenReturn(List.of(item));
+        when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
+
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.PAST, 0, 5);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void getAllBookingsForOwner_whenBookingsWasFoundForFuture_thenReturnListOfBookings() {
+        User booker = User.builder().id(1L).build();
+        Item item = Item.builder()
+                .id(1L)
+                .build();
+        Booking first = Booking.builder()
+                .id(1L)
+                .start(LocalDateTime.of(2023, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2023, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        Booking second = Booking.builder()
+                .id(2L)
+                .start(LocalDateTime.of(2022, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2022, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
+        when(itemRepository.findALlByOwnerId(anyLong())).thenReturn(List.of(item));
+        when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
+
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.FUTURE, 0, 5);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void getAllBookingsForOwner_whenBookingsWasFoundForWaiting_thenReturnListOfBookings() {
+        User booker = User.builder().id(1L).build();
+        Item item = Item.builder()
+                .id(1L)
+                .build();
+        Booking first = Booking.builder()
+                .id(1L)
+                .start(LocalDateTime.of(2023, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2023, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        Booking second = Booking.builder()
+                .id(2L)
+                .start(LocalDateTime.of(2022, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2022, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
+        when(itemRepository.findALlByOwnerId(anyLong())).thenReturn(List.of(item));
+        when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
+
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.WAITING, 0, 5);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void getAllBookingsForOwner_whenBookingsWasFoundForRejected_thenReturnListOfBookings() {
+        User booker = User.builder().id(1L).build();
+        Item item = Item.builder()
+                .id(1L)
+                .build();
+        Booking first = Booking.builder()
+                .id(1L)
+                .start(LocalDateTime.of(2023, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2023, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        Booking second = Booking.builder()
+                .id(2L)
+                .start(LocalDateTime.of(2022, 1, 1, 1, 1))
+                .end(LocalDateTime.of(2022, 1, 2, 1, 1))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
+        when(itemRepository.findALlByOwnerId(anyLong())).thenReturn(List.of(item));
+        when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
+
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.REJECTED, 0, 5);
 
         assertEquals(2, result.size());
     }

@@ -186,6 +186,69 @@ class ItemServiceImplTest {
     }
 
     @Test
+    public void patchItem_whenItemUpdatesAreCorrectAndNameNull_thenReturnUpdatedItem() {
+        User owner = User.builder().id(1L).build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("asd")
+                .description("testDesc")
+                .available(true)
+                .owner(owner)
+                .build();
+        ItemUpdateDto itemUpdates = ItemUpdateDto.builder().description("new desc").available(false).build();
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+
+        ItemDto updatedItem = itemService.patchItem(itemUpdates, item.getId(), owner.getId());
+
+        assertEquals(item.getId(), updatedItem.getId());
+        assertEquals(item.getName(), updatedItem.getName());
+        assertEquals(itemUpdates.getDescription(), updatedItem.getDescription());
+        assertEquals(itemUpdates.getAvailable(), updatedItem.getAvailable());
+    }
+
+    @Test
+    public void patchItem_whenItemUpdateAreCorrectAndDescriptionNull_thenReturnUpdatedItem() {
+        User owner = User.builder().id(1L).build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("asd")
+                .description("testDesc")
+                .available(true)
+                .owner(owner)
+                .build();
+        ItemUpdateDto itemUpdates = ItemUpdateDto.builder().name("newTest").available(false).build();
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+
+        ItemDto updatedItem = itemService.patchItem(itemUpdates, item.getId(), owner.getId());
+
+        assertEquals(item.getId(), updatedItem.getId());
+        assertEquals(itemUpdates.getName(), updatedItem.getName());
+        assertEquals(item.getDescription(), updatedItem.getDescription());
+        assertEquals(itemUpdates.getAvailable(), updatedItem.getAvailable());
+    }
+
+    @Test
+    public void patchItem_whenItemUpdatesAreCorrectAndAvailableNull_thenReturnUpdatedItem() {
+        User owner = User.builder().id(1L).build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("asd")
+                .description("testDesc")
+                .available(true)
+                .owner(owner)
+                .build();
+        ItemUpdateDto itemUpdates = ItemUpdateDto.builder().name("newTest").description("new desc").build();
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+
+        ItemDto updatedItem = itemService.patchItem(itemUpdates, item.getId(), owner.getId());
+
+        assertEquals(item.getId(), updatedItem.getId());
+        assertEquals(itemUpdates.getName(), updatedItem.getName());
+        assertEquals(itemUpdates.getDescription(), updatedItem.getDescription());
+        assertEquals(item.getAvailable(), updatedItem.getAvailable());
+    }
+
+    @Test
     public void patchItem_whenItemUpdatesNotCorrect_thenThrowValidateException() {
         User owner = User.builder().id(1L).build();
         Item item = Item.builder()
@@ -439,6 +502,85 @@ class ItemServiceImplTest {
         List<ItemInfoDto> items = itemService.getItemsByOwnerId(owner.getId(), 0, 10);
 
         assertEquals(3, items.size());
+    }
+
+    @Test
+    public void getItemsByOwnerId_whenOwnerIsCorrectAndItemHasBookings_thenReturnListOfItems() {
+        User owner = User.builder().id(1L).build();
+        User booker = User.builder().id(2L).build();
+        Item item1 = Item.builder()
+                .id(1L)
+                .name("asd")
+                .description("testDesc")
+                .available(true)
+                .owner(owner)
+                .build();
+        Item item2 = Item.builder()
+                .id(2L)
+                .name("asd")
+                .description("testDesc")
+                .available(true)
+                .owner(owner)
+                .build();
+        Item item3 = Item.builder()
+                .id(3L)
+                .name("asd")
+                .description("testDesc")
+                .available(true)
+                .owner(owner)
+                .build();
+        Booking booking1 = Booking.builder()
+                .id(1L)
+                .item(item1)
+                .booker(booker)
+                .start(LocalDateTime.now().plusDays(1))
+                .end(LocalDateTime.now().plusDays(2))
+                .build();
+        Booking booking2 = Booking.builder()
+                .id(2L)
+                .item(item1)
+                .booker(booker)
+                .start(LocalDateTime.now().plusDays(2))
+                .end(LocalDateTime.now().plusDays(4))
+                .build();
+        Booking booking3 = Booking.builder()
+                .id(3L)
+                .item(item2)
+                .booker(booker)
+                .start(LocalDateTime.now().plusDays(1))
+                .end(LocalDateTime.now().plusDays(2))
+                .build();
+        Booking booking4 = Booking.builder()
+                .id(4L)
+                .item(item2)
+                .booker(booker)
+                .start(LocalDateTime.now().plusDays(1))
+                .end(LocalDateTime.now().plusDays(2))
+                .build();
+        Booking booking5 = Booking.builder()
+                .id(5L)
+                .item(item1)
+                .booker(booker)
+                .start(LocalDateTime.now().minusDays(1))
+                .end(LocalDateTime.now().plusDays(2))
+                .build();
+        Booking booking6 = Booking.builder()
+                .id(6L)
+                .item(item1)
+                .booker(booker)
+                .start(LocalDateTime.now().minusDays(2))
+                .end(LocalDateTime.now())
+                .build();
+        List<Booking> bookings = List.of(booking1, booking2, booking3, booking4, booking5, booking6);
+        PageRequest request = PageRequest.of(0, 10);
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        when(itemRepository.findAllByOwnerId(owner.getId(), request)).thenReturn(new PageImpl<>(List.of(item1, item2, item3)));
+        when(bookingRepository.findAll(any(BooleanExpression.class))).thenReturn(bookings);
+
+        List<ItemInfoDto> items = itemService.getItemsByOwnerId(owner.getId(), 0, 10);
+
+        assertEquals(3, items.size());
+
     }
 
     @Test
