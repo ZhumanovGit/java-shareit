@@ -3,6 +3,7 @@ package ru.practicum.shareit.request;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -117,7 +118,7 @@ class ItemRequestServiceImplIntTest {
                 .description("desc2")
                 .build());
 
-        List<ItemRequestInfoDto> allRequests = itemRequestService.getAllRequests(user.getId(), 0, 10);
+        List<ItemRequestInfoDto> allRequests = itemRequestService.getAllRequests(user.getId(), PageRequest.of(0, 10));
         ItemRequestInfoDto requestInfoDto = allRequests.get(0);
 
         // Assert

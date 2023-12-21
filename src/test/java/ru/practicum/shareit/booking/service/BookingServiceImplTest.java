@@ -387,7 +387,7 @@ class BookingServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         Throwable throwable = assertThrows(NotFoundException.class,
-                () -> bookingService.getAllBookingsForUser(1L, StateStatus.ALL, 0, 1));
+                () -> bookingService.getAllBookingsForUser(1L, StateStatus.ALL, PageRequest.of(0, 10)));
 
         assertEquals(expectedString, throwable.getMessage());
     }
@@ -398,7 +398,7 @@ class BookingServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(Page.empty());
 
-        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.ALL, 0, 1);
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.ALL, PageRequest.of(0, 10));
 
         assertEquals(0, result.size());
     }
@@ -428,7 +428,7 @@ class BookingServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
 
-        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.ALL, 0, 5);
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.ALL, PageRequest.of(0, 10));
 
         assertEquals(2, result.size());
     }
@@ -458,7 +458,7 @@ class BookingServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
 
-        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.CURRENT, 0, 5);
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.CURRENT, PageRequest.of(0, 10));
 
         assertEquals(2, result.size());
     }
@@ -488,7 +488,7 @@ class BookingServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
 
-        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.PAST, 0, 5);
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.PAST, PageRequest.of(0, 10));
 
         assertEquals(2, result.size());
     }
@@ -518,7 +518,7 @@ class BookingServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
 
-        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.FUTURE, 0, 5);
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.FUTURE, PageRequest.of(0, 10));
 
         assertEquals(2, result.size());
     }
@@ -548,7 +548,7 @@ class BookingServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
 
-        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.WAITING, 0, 5);
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.WAITING, PageRequest.of(0, 10));
 
         assertEquals(2, result.size());
     }
@@ -578,7 +578,7 @@ class BookingServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
 
-        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.REJECTED, 0, 5);
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.REJECTED, PageRequest.of(0, 10));
 
         assertEquals(2, result.size());
     }
@@ -589,7 +589,7 @@ class BookingServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         Throwable throwable = assertThrows(NotFoundException.class,
-                () -> bookingService.getAllBookingsForOwner(1L, StateStatus.ALL, 0, 1));
+                () -> bookingService.getAllBookingsForOwner(1L, StateStatus.ALL, PageRequest.of(0, 10)));
 
         assertEquals(expectedString, throwable.getMessage());
     }
@@ -602,7 +602,7 @@ class BookingServiceImplTest {
         when(itemRepository.findALlByOwnerId(anyLong())).thenReturn(Collections.emptyList());
 
         Throwable throwable = assertThrows(NotFoundException.class,
-                () -> bookingService.getAllBookingsForOwner(booker.getId(), StateStatus.ALL, 0, 1));
+                () -> bookingService.getAllBookingsForOwner(booker.getId(), StateStatus.ALL, PageRequest.of(0, 10)));
 
         assertEquals(excpectedString, throwable.getMessage());
     }
@@ -617,7 +617,7 @@ class BookingServiceImplTest {
         when(itemRepository.findALlByOwnerId(anyLong())).thenReturn(List.of(item));
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(Page.empty());
 
-        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.ALL, 0, 1);
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.ALL, PageRequest.of(0, 10));
 
         assertEquals(0, result.size());
     }
@@ -648,7 +648,7 @@ class BookingServiceImplTest {
         when(itemRepository.findALlByOwnerId(anyLong())).thenReturn(List.of(item));
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
 
-        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.ALL, 0, 5);
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.ALL, PageRequest.of(0, 10));
 
         assertEquals(2, result.size());
     }
@@ -679,7 +679,7 @@ class BookingServiceImplTest {
         when(itemRepository.findALlByOwnerId(anyLong())).thenReturn(List.of(item));
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
 
-        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.CURRENT, 0, 5);
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.CURRENT, PageRequest.of(0, 10));
 
         assertEquals(2, result.size());
     }
@@ -710,7 +710,7 @@ class BookingServiceImplTest {
         when(itemRepository.findALlByOwnerId(anyLong())).thenReturn(List.of(item));
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
 
-        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.PAST, 0, 5);
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.PAST, PageRequest.of(0, 10));
 
         assertEquals(2, result.size());
     }
@@ -741,7 +741,7 @@ class BookingServiceImplTest {
         when(itemRepository.findALlByOwnerId(anyLong())).thenReturn(List.of(item));
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
 
-        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.FUTURE, 0, 5);
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.FUTURE, PageRequest.of(0, 10));
 
         assertEquals(2, result.size());
     }
@@ -772,7 +772,7 @@ class BookingServiceImplTest {
         when(itemRepository.findALlByOwnerId(anyLong())).thenReturn(List.of(item));
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
 
-        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.WAITING, 0, 5);
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.WAITING, PageRequest.of(0, 10));
 
         assertEquals(2, result.size());
     }
@@ -803,7 +803,7 @@ class BookingServiceImplTest {
         when(itemRepository.findALlByOwnerId(anyLong())).thenReturn(List.of(item));
         when(bookingRepository.findAll(any(BooleanExpression.class), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
 
-        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.REJECTED, 0, 5);
+        List<BookingDto> result = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.REJECTED, PageRequest.of(0, 10));
 
         assertEquals(2, result.size());
     }

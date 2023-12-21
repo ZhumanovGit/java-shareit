@@ -3,6 +3,7 @@ package ru.practicum.shareit.booking.service;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
@@ -169,19 +170,17 @@ class BookingServiceImplIntTest {
                 .item(item2)
                 .build());
 
-        List<BookingDto> bookingsForUser = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.ALL, 0, 10);
+        List<BookingDto> bookingsForUser = bookingService.getAllBookingsForUser(booker.getId(), StateStatus.ALL, PageRequest.of(0, 10));
 
-        // Assert
         assertNotNull(bookingsForUser);
         assertFalse(bookingsForUser.isEmpty());
         assertEquals(2, bookingsForUser.size());
-        assertEquals(booking.getId(), bookingsForUser.get(1).getId());
-        assertEquals(booking2.getId(), bookingsForUser.get(0).getId());
+        assertEquals(booking.getId(), bookingsForUser.get(0).getId());
+        assertEquals(booking2.getId(), bookingsForUser.get(1).getId());
     }
 
     @Test
     void getAllBookingsForOwner_whenDataIsCorrect_thenReturnListOfBookings() {
-        // Arrange
         User owner1 = userRepository.save(User.builder()
                 .name("name1")
                 .email("nice@email.com")
@@ -221,7 +220,7 @@ class BookingServiceImplIntTest {
                 .item(item2)
                 .build());
 
-        List<BookingDto> bookingsForOwner = bookingService.getAllBookingsForOwner(owner1.getId(), StateStatus.ALL, 0, 10);
+        List<BookingDto> bookingsForOwner = bookingService.getAllBookingsForOwner(owner1.getId(), StateStatus.ALL, PageRequest.of(0, 10));
 
         assertNotNull(bookingsForOwner);
         assertFalse(bookingsForOwner.isEmpty());

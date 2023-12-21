@@ -1,9 +1,7 @@
 package ru.practicum.shareit.item.service;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -13,11 +11,9 @@ import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
-import ru.practicum.shareit.booking.model.QBooking;
 import ru.practicum.shareit.comment.Comment;
 import ru.practicum.shareit.comment.CommentMapper;
 import ru.practicum.shareit.comment.CommentRepository;
-import ru.practicum.shareit.comment.QComment;
 import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.ItemMapper;
 import ru.practicum.shareit.item.dto.ItemCreateDto;
@@ -32,11 +28,11 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
@@ -151,34 +147,24 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ItemInfoDto> getItemsByOwnerId(long ownerId, int from, int size) {
+    public List<ItemInfoDto> getItemsByOwnerId(long ownerId, Pageable pageable) {
 
         userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
-        int page = 0;
-        if (from >= size) {
-            page = (from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size;
+        List<Item> items = itemRepository.findAllByOwnerId(ownerId, pageable);
+        if (items.isEmpty()) {
+            return Collections.emptyList();
         }
-        Page<Item> items = itemRepository.findAllByOwnerId(ownerId, PageRequest.of(page, size));
         List<Long> itemIds = items.stream()
                 .map(Item::getId)
                 .collect(Collectors.toList());
-        LocalDateTime now = LocalDateTime.now();
 
-        BooleanExpression lastBookingsExpression = QBooking.booking.item.id.in(itemIds)
-                .and(QBooking.booking.start.before(now))
-                .and(QBooking.booking.status.eq(BookingStatus.APPROVED));
-        List<Booking> previousBookings = StreamSupport.stream(bookingRepository
-                        .findAll(lastBookingsExpression).spliterator(), false)
-                .collect(Collectors.toList());
-        BooleanExpression nextBookingsExpression = QBooking.booking.item.id.in(itemIds)
-                .and(QBooking.booking.start.after(now))
-                .and(QBooking.booking.status.ne(BookingStatus.REJECTED));
-        List<Booking> futureBookings = StreamSupport.stream(bookingRepository
-                        .findAll(nextBookingsExpression).spliterator(), false)
-                .collect(Collectors.toList());
-        BooleanExpression commentExpression = QComment.comment.item.id.in(itemIds);
-        List<Comment> allComments = (List<Comment>) commentRepository.findAll(commentExpression,
+        LocalDateTime now = LocalDateTime.now();
+        List<Booking> previousBookings = bookingRepository
+                .findAllByItemIdInAndStartBeforeAndStatusIs(itemIds, now, BookingStatus.APPROVED);
+        List<Booking> futureBookings = bookingRepository
+                .findAllByItemIdInAndStartAfterAndStatusIsNot(itemIds, now, BookingStatus.REJECTED);
+        List<Comment> allComments = commentRepository.findAllByItemIdIn(itemIds,
                 Sort.by(Sort.Direction.ASC, "created"));
 
         Map<Long, Booking> itemsLastBookings = new HashMap<>();
@@ -225,16 +211,13 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ItemDto> getItemsByNameOrDesc(String substring, int from, int size) {
+    public List<ItemDto> getItemsByNameOrDesc(String substring, Pageable pageable) {
         if (substring.isBlank()) {
             return new ArrayList<>();
         }
         String needSubstring = substring.toLowerCase();
-        int page = 0;
-        if (from >= size) {
-            page = from % size == 0 ? (from / size) - 1 : from / size;
-        }
-        Page<Item> items = itemRepository.findAllByNameOrDesc(needSubstring, PageRequest.of(page, size));
+
+        List<Item> items = itemRepository.findAllByNameOrDesc(needSubstring, pageable);
         return items.stream()
                 .filter(Item::getAvailable)
                 .map(mapper::itemToItemDto)

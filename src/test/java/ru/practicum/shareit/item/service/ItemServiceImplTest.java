@@ -3,8 +3,6 @@ package ru.practicum.shareit.item.service;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.booking.BookingMapper;
@@ -35,6 +33,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -454,7 +453,7 @@ class ItemServiceImplTest {
         String expectedResponse = "Пользователь с id = 5 не найден";
         when(userRepository.findById(5L)).thenReturn(Optional.empty());
 
-        Throwable throwable = assertThrows(NotFoundException.class, () -> itemService.getItemsByOwnerId(5L, 0, 10));
+        Throwable throwable = assertThrows(NotFoundException.class, () -> itemService.getItemsByOwnerId(5L, PageRequest.of(0, 10)));
 
         assertEquals(expectedResponse, throwable.getMessage());
     }
@@ -463,9 +462,8 @@ class ItemServiceImplTest {
     public void getItemsByOwnerId_whenItemsWasNotFound_thenReturnEmptyList() {
         User user = User.builder().id(1L).build();
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        when(itemRepository.findAllByOwnerId(anyLong(), any())).thenReturn(Page.empty());
-
-        List<ItemInfoDto> dto = itemService.getItemsByOwnerId(user.getId(), 0, 1);
+        when(itemRepository.findAllByOwnerId(anyLong(), any())).thenReturn(Collections.emptyList());
+        List<ItemInfoDto> dto = itemService.getItemsByOwnerId(user.getId(), PageRequest.of(0, 10));
 
         assertEquals(0, dto.size());
     }
@@ -496,10 +494,15 @@ class ItemServiceImplTest {
                 .build();
         PageRequest request = PageRequest.of(0, 10);
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
-        when(itemRepository.findAllByOwnerId(owner.getId(), request)).thenReturn(new PageImpl<>(List.of(item1, item2, item3)));
+        when(itemRepository.findAllByOwnerId(owner.getId(), request)).thenReturn(List.of(item1, item2, item3));
         when(bookingRepository.findAll(any(BooleanExpression.class))).thenReturn(Collections.emptyList());
+        when(bookingRepository.findAllByItemIdInAndStartBeforeAndStatusIs(anyList(), any(LocalDateTime.class), any(BookingStatus.class)))
+                .thenReturn(Collections.emptyList());
+        when(bookingRepository.findAllByItemIdInAndStartAfterAndStatusIsNot(anyList(), any(LocalDateTime.class), any(BookingStatus.class)))
+                .thenReturn(Collections.emptyList());
+        when(commentRepository.findAllByItemIdIn(anyList(), any(Sort.class))).thenReturn(Collections.emptyList());
 
-        List<ItemInfoDto> items = itemService.getItemsByOwnerId(owner.getId(), 0, 10);
+        List<ItemInfoDto> items = itemService.getItemsByOwnerId(owner.getId(), PageRequest.of(0, 10));
 
         assertEquals(3, items.size());
     }
@@ -574,10 +577,15 @@ class ItemServiceImplTest {
         List<Booking> bookings = List.of(booking1, booking2, booking3, booking4, booking5, booking6);
         PageRequest request = PageRequest.of(0, 10);
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
-        when(itemRepository.findAllByOwnerId(owner.getId(), request)).thenReturn(new PageImpl<>(List.of(item1, item2, item3)));
-        when(bookingRepository.findAll(any(BooleanExpression.class))).thenReturn(bookings);
+        when(itemRepository.findAllByOwnerId(owner.getId(), request)).thenReturn(List.of(item1, item2, item3));
+        when(bookingRepository.findAllByItemIdInAndStartBeforeAndStatusIs(anyList(), any(LocalDateTime.class), any(BookingStatus.class)))
+                .thenReturn(bookings);
+        when(bookingRepository.findAllByItemIdInAndStartAfterAndStatusIsNot(anyList(), any(LocalDateTime.class), any(BookingStatus.class)))
+                .thenReturn(bookings);
+        when(commentRepository.findAllByItemIdIn(anyList(), any(Sort.class))).thenReturn(Collections.emptyList());
 
-        List<ItemInfoDto> items = itemService.getItemsByOwnerId(owner.getId(), 0, 10);
+
+        List<ItemInfoDto> items = itemService.getItemsByOwnerId(owner.getId(), PageRequest.of(0, 10));
 
         assertEquals(3, items.size());
 
@@ -585,7 +593,7 @@ class ItemServiceImplTest {
 
     @Test
     public void getItemsByNameOrDesc_whenStringIsBlank_thenReturnEmptyList() {
-        List<ItemDto> items = itemService.getItemsByNameOrDesc("", 0, 10);
+        List<ItemDto> items = itemService.getItemsByNameOrDesc("", PageRequest.of(0, 10));
 
         assertEquals(0, items.size());
     }
@@ -615,9 +623,9 @@ class ItemServiceImplTest {
                 .owner(owner)
                 .build();
         PageRequest request = PageRequest.of(0, 10);
-        when(itemRepository.findAllByNameOrDesc("tes", request)).thenReturn(new PageImpl<>(List.of(item1, item2, item3)));
+        when(itemRepository.findAllByNameOrDesc("tes", request)).thenReturn(List.of(item1, item2, item3));
 
-        List<ItemDto> items = itemService.getItemsByNameOrDesc("tEs", 0, 10);
+        List<ItemDto> items = itemService.getItemsByNameOrDesc("tEs", PageRequest.of(0, 10));
 
         assertEquals(3, items.size());
     }

@@ -19,7 +19,6 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -132,8 +131,11 @@ class CommentServiceImplTest {
                 .build();
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
-        when(bookingRepository.findAll(any(BooleanExpression.class), any(Sort.class)))
-                .thenReturn(List.of(booking));
+        when(bookingRepository
+                .findFirstByBookerIdAndItemIdAndEndBefore(anyLong(),
+                        anyLong(),
+                        any(LocalDateTime.class),
+                        any(Sort.class))).thenReturn(Optional.of(booking));
         when(commentRepository.save(any(Comment.class))).thenReturn(result);
 
         CommentDto dto = service.createNewComment(createDto, item.getId(), user.getId());

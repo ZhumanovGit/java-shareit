@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.comment.dto.CommentCreateDto;
@@ -19,7 +21,6 @@ import ru.practicum.shareit.item.service.ItemService;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -48,7 +49,7 @@ class ItemControllerTest {
                 ItemInfoDto.builder().id(1L).build(),
                 ItemInfoDto.builder().id(2L).build()
         );
-        when(itemService.getItemsByOwnerId(userId, 0, Integer.MAX_VALUE)).thenReturn(mockItems);
+        when(itemService.getItemsByOwnerId(userId, PageRequest.of(0, 10))).thenReturn(mockItems);
 
         mvc.perform(get("/items")
                         .header("X-Sharer-User-Id", userId)
@@ -64,7 +65,7 @@ class ItemControllerTest {
                 ItemInfoDto.builder().id(1L).build(),
                 ItemInfoDto.builder().id(2L).build()
         );
-        when(itemService.getItemsByOwnerId(userId, 0, 3)).thenReturn(mockItems);
+        when(itemService.getItemsByOwnerId(userId, PageRequest.of(0, 3))).thenReturn(mockItems);
 
         mvc.perform(get("/items")
                         .header("X-Sharer-User-Id", userId)
@@ -131,7 +132,7 @@ class ItemControllerTest {
                 .description("test")
                 .build();
         List<ItemDto> result = List.of(first, second);
-        when(itemService.getItemsByNameOrDesc(anyString(), anyInt(), anyInt())).thenReturn(result);
+        when(itemService.getItemsByNameOrDesc(anyString(), any(Pageable.class))).thenReturn(result);
 
         mvc.perform(get("/items/search")
                         .header("X-Sharer-User-Id", requesterId)
@@ -156,7 +157,7 @@ class ItemControllerTest {
                 .description("test")
                 .build();
         List<ItemDto> result = List.of(first, second);
-        when(itemService.getItemsByNameOrDesc(anyString(), anyInt(), anyInt())).thenReturn(result);
+        when(itemService.getItemsByNameOrDesc(anyString(), any(Pageable.class))).thenReturn(result);
 
         mvc.perform(get("/items/search")
                         .header("X-Sharer-User-Id", requesterId)

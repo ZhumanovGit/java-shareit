@@ -3,6 +3,7 @@ package ru.practicum.shareit.item.service;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.comment.CommentRepository;
@@ -132,7 +133,7 @@ class ItemServiceImplIntTest {
                 .owner(owner)
                 .build());
 
-        List<ItemInfoDto> itemsByOwnerId = itemService.getItemsByOwnerId(owner.getId(), 0, 10);
+        List<ItemInfoDto> itemsByOwnerId = itemService.getItemsByOwnerId(owner.getId(), PageRequest.of(0, 10));
 
         assertNotNull(itemsByOwnerId);
         assertFalse(itemsByOwnerId.isEmpty());
@@ -164,7 +165,7 @@ class ItemServiceImplIntTest {
                 .owner(owner)
                 .build());
 
-        List<ItemDto> itemsByNameOrDesc = itemService.getItemsByNameOrDesc("nam", 0, 10);
+        List<ItemDto> itemsByNameOrDesc = itemService.getItemsByNameOrDesc("nam", PageRequest.of(0, 10));
 
         assertNotNull(itemsByNameOrDesc);
         assertFalse(itemsByNameOrDesc.isEmpty());

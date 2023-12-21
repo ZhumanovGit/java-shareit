@@ -3,8 +3,7 @@ package ru.practicum.shareit.booking.service;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -100,18 +99,13 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookingDto> getAllBookingsForUser(Long userId, StateStatus state, int from, int size) {
+    public List<BookingDto> getAllBookingsForUser(Long userId, StateStatus state, Pageable pageable) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
 
         BooleanExpression byBookerId = QBooking.booking.booker.id.eq(userId);
-        Sort startDesc = Sort.by(Sort.Direction.DESC, "start");
         BooleanExpression queryExpression = byBookerId.and(getBookingExpression(state));
-        int page = 0;
-        if (from >= size) {
-            page = (from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size;
-        }
-        Page<Booking> result = bookingRepository.findAll(queryExpression, PageRequest.of(page, size, startDesc));
+        Page<Booking> result = bookingRepository.findAll(queryExpression, pageable);
 
         return result.stream()
                 .map(mapper::bookingToBookingDto)
@@ -120,7 +114,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookingDto> getAllBookingsForOwner(Long ownerId, StateStatus state, int from, int size) {
+    public List<BookingDto> getAllBookingsForOwner(Long ownerId, StateStatus state, Pageable pageable) {
         userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
         List<Item> items = itemRepository.findALlByOwnerId(ownerId);
@@ -129,13 +123,8 @@ public class BookingServiceImpl implements BookingService {
         }
 
         BooleanExpression byItemOwnerId = QBooking.booking.item.owner.id.eq(ownerId);
-        Sort startDesc = Sort.by(Sort.Direction.DESC, "start");
         BooleanExpression queryExpression = byItemOwnerId.and(getBookingExpression(state));
-        int page = 0;
-        if (from >= size) {
-            page = (from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size;
-        }
-        Page<Booking> result = bookingRepository.findAll(queryExpression, PageRequest.of(page, size, startDesc));
+        Page<Booking> result = bookingRepository.findAll(queryExpression, pageable);
 
         return result.stream()
                 .map(mapper::bookingToBookingDto)
@@ -166,7 +155,7 @@ public class BookingServiceImpl implements BookingService {
                 expression = QBooking.booking.status.eq(BookingStatus.REJECTED);
                 break;
             default:
-                throw new NotFoundException("Не найден параметр поиска");
+                expression = null;
         }
 
         return expression;

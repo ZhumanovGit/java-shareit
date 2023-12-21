@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
@@ -17,7 +18,6 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -142,7 +142,7 @@ class BookingControllerTest {
         BookingDto second = BookingDto.builder().id(2L).build();
         BookingDto third = BookingDto.builder().id(3L).build();
         List<BookingDto> result = List.of(first, second, third);
-        when(service.getAllBookingsForUser(anyLong(), any(StateStatus.class), anyInt(), anyInt())).thenReturn(result);
+        when(service.getAllBookingsForUser(anyLong(), any(StateStatus.class), any(Pageable.class))).thenReturn(result);
 
         mvc.perform(get("/bookings")
                         .header("X-Sharer-User-Id", userId)
@@ -180,7 +180,7 @@ class BookingControllerTest {
         BookingDto second = BookingDto.builder().id(2L).build();
         BookingDto third = BookingDto.builder().id(3L).build();
         List<BookingDto> result = List.of(first, second, third);
-        when(service.getAllBookingsForUser(anyLong(), any(StateStatus.class), anyInt(), anyInt())).thenReturn(result);
+        when(service.getAllBookingsForUser(anyLong(), any(StateStatus.class), any(Pageable.class))).thenReturn(result);
 
         mvc.perform(get("/bookings")
                         .header("X-Sharer-User-Id", userId)
@@ -199,7 +199,7 @@ class BookingControllerTest {
         BookingDto second = BookingDto.builder().id(2L).build();
         BookingDto third = BookingDto.builder().id(3L).build();
         List<BookingDto> result = List.of(first, second, third);
-        when(service.getAllBookingsForOwner(anyLong(), any(StateStatus.class), anyInt(), anyInt())).thenReturn(result);
+        when(service.getAllBookingsForOwner(anyLong(), any(StateStatus.class), any(Pageable.class))).thenReturn(result);
 
         mvc.perform(get("/bookings/owner")
                         .header("X-Sharer-User-Id", userId)
@@ -237,7 +237,7 @@ class BookingControllerTest {
         BookingDto second = BookingDto.builder().id(2L).build();
         BookingDto third = BookingDto.builder().id(3L).build();
         List<BookingDto> result = List.of(first, second, third);
-        when(service.getAllBookingsForOwner(anyLong(), any(StateStatus.class), anyInt(), anyInt())).thenReturn(result);
+        when(service.getAllBookingsForOwner(anyLong(), any(StateStatus.class), any(Pageable.class))).thenReturn(result);
 
         mvc.perform(get("/bookings/owner")
                         .header("X-Sharer-User-Id", userId)

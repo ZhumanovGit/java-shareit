@@ -35,4 +35,17 @@ public interface BookingRepository extends JpaRepository<Booking, Long>, Queryds
                                                                    LocalDateTime now,
                                                                    BookingStatus bookingStatus,
                                                                    Sort start);
+
+    Optional<Booking> findFirstByBookerIdAndItemIdAndEndBefore(Long authorId,
+                                                               Long itemId,
+                                                               LocalDateTime now,
+                                                               Sort end);
+
+    List<Booking> findAllByItemIdInAndStartBeforeAndStatusIs(List<Long> itemIds,
+                                                             LocalDateTime now,
+                                                             BookingStatus bookingStatus);
+
+    List<Booking> findAllByItemIdInAndStartAfterAndStatusIsNot(List<Long> itemIds,
+                                                               LocalDateTime now,
+                                                               BookingStatus bookingStatus);
 }

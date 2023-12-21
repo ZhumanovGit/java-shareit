@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.request.dto.ItemRequestCreateDto;
@@ -15,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -133,7 +133,7 @@ class ItemRequestControllerTest {
                 .description("test")
                 .build();
         List<ItemRequestInfoDto> result = List.of(first, second, third);
-        when(service.getAllRequests(1L, 0, 10)).thenReturn(result);
+        when(service.getAllRequests(anyLong(), any(Pageable.class))).thenReturn(result);
 
         mvc.perform(get("/requests/all")
                         .header("X-Sharer-User-Id", "1")
@@ -187,7 +187,7 @@ class ItemRequestControllerTest {
                 .description("test")
                 .build();
         List<ItemRequestInfoDto> result = List.of(first, second, third);
-        when(service.getAllRequests(anyLong(), anyInt(), anyInt())).thenReturn(result);
+        when(service.getAllRequests(anyLong(), any(Pageable.class))).thenReturn(result);
 
         mvc.perform(get("/requests/all")
                         .header("X-Sharer-User-Id", "1")

@@ -2,7 +2,7 @@ package ru.practicum.shareit.request;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.exception.model.NotFoundException;
@@ -170,9 +170,6 @@ class ItemRequestServiceImplTest {
     public void getAllRequests_whenUserWasFoundAndRequestsFoundWithoutItems_thenReturnListOfRequests() {
         User owner = User.builder().id(1L).build();
         User anotherUser = User.builder().id(2L).build();
-        Sort sort = Sort.by(Sort.Direction.DESC, "created");
-        int from = 0;
-        int size = 5;
         ItemRequest first = ItemRequest.builder()
                 .id(1L)
                 .owner(anotherUser)
@@ -186,10 +183,10 @@ class ItemRequestServiceImplTest {
                 .created(LocalDateTime.of(2022, 1, 12, 10, 10))
                 .build();
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
-        when(requestRepository.findAllByOwnerIdNot(anyLong(), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(first, second)));
+        when(requestRepository.findAllByOwnerIdNot(anyLong(), any(Pageable.class))).thenReturn(List.of(first, second));
         when(itemRepository.findAllByRequestIdIn(anyList())).thenReturn(Collections.emptyList());
 
-        List<ItemRequestInfoDto> actual = service.getAllRequests(owner.getId(), from, size);
+        List<ItemRequestInfoDto> actual = service.getAllRequests(owner.getId(), PageRequest.of(0, 10));
 
         assertEquals(2, actual.size());
         assertEquals(0, actual.get(0).getItems().size());
@@ -200,8 +197,6 @@ class ItemRequestServiceImplTest {
     public void getAllRequests_whenUserWasFoundAndRequestsFoundWithItems_thenReturnListOfRequests() {
         User owner = User.builder().id(1L).build();
         User anotherUser = User.builder().id(2L).build();
-        int from = 0;
-        int size = 5;
         ItemRequest first = ItemRequest.builder()
                 .id(1L)
                 .owner(anotherUser)
@@ -229,10 +224,10 @@ class ItemRequestServiceImplTest {
                 .available(true)
                 .build();
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
-        when(requestRepository.findAllByOwnerIdNot(anyLong(), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(first, second)));
+        when(requestRepository.findAllByOwnerIdNot(anyLong(), any(Pageable.class))).thenReturn(List.of(first, second));
         when(itemRepository.findAllByRequestIdIn(anyList())).thenReturn(List.of(firstItem, seoncdItem));
 
-        List<ItemRequestInfoDto> actual = service.getAllRequests(owner.getId(), from, size);
+        List<ItemRequestInfoDto> actual = service.getAllRequests(owner.getId(), PageRequest.of(0, 10));
 
         assertEquals(2, actual.size());
         assertEquals(2, actual.get(0).getItems().size());
@@ -243,8 +238,6 @@ class ItemRequestServiceImplTest {
     public void getAllRequests_whenWasCustomPageParams_whenReturnListOfRequests() {
         User owner = User.builder().id(1L).build();
         User anotherUser = User.builder().id(2L).build();
-        int from = 10;
-        int size = 5;
         ItemRequest first = ItemRequest.builder()
                 .id(1L)
                 .owner(anotherUser)
@@ -272,10 +265,10 @@ class ItemRequestServiceImplTest {
                 .available(true)
                 .build();
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
-        when(requestRepository.findAllByOwnerIdNot(anyLong(), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(first, second)));
+        when(requestRepository.findAllByOwnerIdNot(anyLong(), any(Pageable.class))).thenReturn(List.of(first, second));
         when(itemRepository.findAllByRequestIdIn(anyList())).thenReturn(List.of(firstItem, seoncdItem));
 
-        List<ItemRequestInfoDto> actual = service.getAllRequests(owner.getId(), from, size);
+        List<ItemRequestInfoDto> actual = service.getAllRequests(owner.getId(), PageRequest.of(1, 5));
 
         assertEquals(2, actual.size());
         assertEquals(2, actual.get(0).getItems().size());
@@ -288,7 +281,7 @@ class ItemRequestServiceImplTest {
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         Throwable throwable = assertThrows(NotFoundException.class,
-                () -> service.getAllRequests(1L, 0, 5));
+                () -> service.getAllRequests(1L, PageRequest.of(0, 10)));
 
         assertEquals(expectedResponse, throwable.getMessage());
     }

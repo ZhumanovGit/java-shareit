@@ -2,6 +2,7 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,7 @@ import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
@@ -38,12 +40,14 @@ public class ItemController {
     @GetMapping
     public List<ItemInfoDto> getAllUserItems(@RequestHeader(value = "X-Sharer-User-Id") long ownerId,
                                              @PositiveOrZero @RequestParam(defaultValue = "0") int from,
-                                             @PositiveOrZero @RequestParam(defaultValue = "0") int size) {
-        if (size == 0) {
-            size = Integer.MAX_VALUE;
+                                             @Positive @RequestParam(defaultValue = "10") int size) {
+        int page = 0;
+        if (from >= size) {
+            page = (from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size;
         }
+        PageRequest request = PageRequest.of(page, size);
         log.info("Обработка запроса на получение всех вещей пользователя с id = {}", ownerId);
-        List<ItemInfoDto> items = itemService.getItemsByOwnerId(ownerId, from, size);
+        List<ItemInfoDto> items = itemService.getItemsByOwnerId(ownerId, request);
         log.info("Получены все вещи пользователя с id = {}", ownerId);
         return items;
     }
@@ -60,12 +64,14 @@ public class ItemController {
     @GetMapping("/search")
     public List<ItemDto> searchItems(@RequestParam(value = "text") String text,
                                      @PositiveOrZero @RequestParam(defaultValue = "0") int from,
-                                     @PositiveOrZero @RequestParam(defaultValue = "0") int size) {
-        if (size == 0) {
-            size = Integer.MAX_VALUE;
+                                     @Positive @RequestParam(defaultValue = "10") int size) {
+        int page = 0;
+        if (from >= size) {
+            page = (from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size;
         }
+        PageRequest request = PageRequest.of(page, size);
         log.info("Обработка запроса на выполнение поиска по строке {}", text);
-        List<ItemDto> items = itemService.getItemsByNameOrDesc(text, from, size);
+        List<ItemDto> items = itemService.getItemsByNameOrDesc(text, request);
         log.info("Получен список длиной {}", items.size());
         return items;
     }

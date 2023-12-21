@@ -1,12 +1,9 @@
 package ru.practicum.shareit.comment.service;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.BookingRepository;
-import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.model.QBooking;
 import ru.practicum.shareit.comment.Comment;
 import ru.practicum.shareit.comment.CommentMapper;
 import ru.practicum.shareit.comment.CommentRepository;
@@ -19,7 +16,6 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -41,15 +37,12 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new PostCommentException("Объект с id = " + itemId + " не найден"));
 
         LocalDateTime now = LocalDateTime.now();
-        BooleanExpression expression = QBooking.booking.booker.id.eq(authorId)
-                .and(QBooking.booking.item.id.eq(itemId))
-                .and(QBooking.booking.end.before(now));
-        List<Booking> bookings = (List<Booking>) bookingRepository
-                .findAll(expression,
-                        Sort.by(Sort.Direction.DESC, "end"));
-        if (bookings.isEmpty()) {
-            throw new PostCommentException("Бронь с такими данными не найдена");
-        }
+        bookingRepository
+                .findFirstByBookerIdAndItemIdAndEndBefore(authorId,
+                        itemId,
+                        now,
+                        Sort.by(Sort.Direction.DESC, "end"))
+                .orElseThrow(() -> new PostCommentException("Бронь с такими данными не найдена"));
 
         Comment comment = mapper.commentCreateDtoToComment(dto);
         comment.setItem(item);

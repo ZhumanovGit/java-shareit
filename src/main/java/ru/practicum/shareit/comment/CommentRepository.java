@@ -11,4 +11,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long>, Queryds
     List<Comment> findAllByItemId(Long itemId, Sort sort);
 
     void deleteAllByAuthorId(Long authorId);
+
+    List<Comment> findAllByItemIdIn(List<Long> itemIds,
+                                    Sort created);
 }

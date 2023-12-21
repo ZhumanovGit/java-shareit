@@ -2,6 +2,8 @@ package ru.practicum.shareit.request;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,10 +49,16 @@ public class ItemRequestController {
 
     @GetMapping("/all")
     public List<ItemRequestInfoDto> getAllOthers(@PositiveOrZero @RequestParam(defaultValue = "0") int from,
-                                                 @Positive @RequestParam(defaultValue = "1") int size,
+                                                 @Positive @RequestParam(defaultValue = "10") int size,
                                                  @RequestHeader("X-Sharer-User-Id") long userId) {
+        Sort sort = Sort.by(Sort.Direction.DESC, "created");
+        int page = 0;
+        if (from >= size) {
+            page = (from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size;
+        }
+        PageRequest request = PageRequest.of(page, size, sort);
         log.info("Обработка запроса на получение чужих обращений");
-        List<ItemRequestInfoDto> result = service.getAllRequests(userId, from, size);
+        List<ItemRequestInfoDto> result = service.getAllRequests(userId, request);
         log.info("Получен список всех обращений длиной {}", result.size());
         return result;
     }

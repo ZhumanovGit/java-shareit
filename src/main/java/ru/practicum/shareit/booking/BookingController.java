@@ -2,6 +2,8 @@ package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -18,6 +20,7 @@ import ru.practicum.shareit.booking.model.StateStatus;
 import ru.practicum.shareit.booking.service.BookingService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
@@ -64,13 +67,16 @@ public class BookingController {
     public List<BookingDto> getUserBookings(@RequestParam(name = "state", required = false, defaultValue = "ALL") String state,
                                             @RequestHeader("X-Sharer-User-Id") long userId,
                                             @PositiveOrZero @RequestParam(defaultValue = "0") int from,
-                                            @PositiveOrZero @RequestParam(required = false) Integer size) {
-        if (size == null) {
-            size = Integer.MAX_VALUE;
+                                            @Positive @RequestParam(required = false, defaultValue = "10") int size) {
+        int page = 0;
+        if (from >= size) {
+            page = (from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size;
         }
+        Sort startDesc = Sort.by(Sort.Direction.DESC, "start");
+        PageRequest request = PageRequest.of(page, size, startDesc);
         StateStatus value = StateStatus.getFromString(state);
         log.info("Обработка запроса на получение всех бронирований пользователя с id = {}, параметр поиска: {}", userId, value);
-        List<BookingDto> bookings = bookingService.getAllBookingsForUser(userId, value, from, size);
+        List<BookingDto> bookings = bookingService.getAllBookingsForUser(userId, value, request);
         log.info("Получен список длиной {}", bookings.size());
         return bookings;
 
@@ -80,14 +86,17 @@ public class BookingController {
     public List<BookingDto> getOwnerBookings(@RequestParam(name = "state", required = false, defaultValue = "ALL") String state,
                                              @RequestHeader("X-Sharer-User-Id") long ownerId,
                                              @PositiveOrZero @RequestParam(defaultValue = "0") int from,
-                                             @PositiveOrZero @RequestParam(required = false) Integer size) {
-        if (size == null) {
-            size = Integer.MAX_VALUE;
+                                             @Positive @RequestParam(required = false, defaultValue = "10") Integer size) {
+        int page = 0;
+        if (from >= size) {
+            page = (from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size;
         }
+        Sort startDesc = Sort.by(Sort.Direction.DESC, "start");
+        PageRequest request = PageRequest.of(page, size, startDesc);
 
         StateStatus value = StateStatus.getFromString(state);
         log.info("Обработка запроса на получение всех бронирований пользователя с id = {}, параметр поиска: {}", ownerId, value);
-        List<BookingDto> bookings = bookingService.getAllBookingsForOwner(ownerId, value, from, size);
+        List<BookingDto> bookings = bookingService.getAllBookingsForOwner(ownerId, value, request);
         log.info("Получен список длиной {}", bookings.size());
         return bookings;
 

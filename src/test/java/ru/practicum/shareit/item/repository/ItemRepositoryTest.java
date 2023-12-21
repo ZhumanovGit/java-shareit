@@ -4,10 +4,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -51,16 +52,16 @@ class ItemRepositoryTest {
         entityManager.merge(second);
         entityManager.merge(third);
 
-        Page<Item> items = itemRepository.findAllByNameOrDesc(searchString, PageRequest.of(0, 10));
+        List<Item> items = itemRepository.findAllByNameOrDesc(searchString, PageRequest.of(0, 10));
 
-        assertEquals(2, items.getTotalElements());
+        assertEquals(2, items.size());
     }
 
     @Test
     public void findAllByNameOrDesc_whenDbIsEmpty_thenReturnPageOfItems() {
-        Page<Item> items = itemRepository.findAllByNameOrDesc("teset", PageRequest.of(0, 10));
+        List<Item> items = itemRepository.findAllByNameOrDesc("teset", PageRequest.of(0, 10));
 
-        assertEquals(0, items.getTotalElements());
+        assertEquals(0, items.size());
     }
 
 
