@@ -52,10 +52,7 @@ public class ItemRequestController {
                                                  @Positive @RequestParam(defaultValue = "10") int size,
                                                  @RequestHeader("X-Sharer-User-Id") long userId) {
         Sort sort = Sort.by(Sort.Direction.DESC, "created");
-        PageRequest request = PageRequest.of(0, size, sort);
-        if (from >= size) {
-            request = PageRequest.of(((from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size), size, sort);
-        }
+        PageRequest request = PageRequest.of(from / size, size, sort);
         log.info("Обработка запроса на получение чужих обращений");
         List<ItemRequestInfoDto> result = service.getAllRequests(userId, request);
         log.info("Получен список всех обращений длиной {}", result.size());

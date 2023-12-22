@@ -69,10 +69,7 @@ public class BookingController {
                                             @PositiveOrZero @RequestParam(defaultValue = "0") int from,
                                             @Positive @RequestParam(required = false, defaultValue = "10") int size) {
         Sort startDesc = Sort.by(Sort.Direction.DESC, "start");
-        PageRequest request = PageRequest.of(0, size, startDesc);
-        if (from >= size) {
-            request = PageRequest.of(((from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size), size, startDesc);
-        }
+        PageRequest request = PageRequest.of(from / size, size, startDesc);
         StateStatus value = StateStatus.getFromString(state);
         log.info("Обработка запроса на получение всех бронирований пользователя с id = {}, параметр поиска: {}", userId, value);
         List<BookingDto> bookings = bookingService.getAllBookingsForUser(userId, value, request);
@@ -87,10 +84,7 @@ public class BookingController {
                                              @PositiveOrZero @RequestParam(defaultValue = "0") int from,
                                              @Positive @RequestParam(required = false, defaultValue = "10") Integer size) {
         Sort startDesc = Sort.by(Sort.Direction.DESC, "start");
-        PageRequest request = PageRequest.of(0, size, startDesc);
-        if (from >= size) {
-            request = PageRequest.of(((from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size), size, startDesc);
-        }
+        PageRequest request = PageRequest.of(from / size, size, startDesc);
         StateStatus value = StateStatus.getFromString(state);
         log.info("Обработка запроса на получение всех бронирований пользователя с id = {}, параметр поиска: {}", ownerId, value);
         List<BookingDto> bookings = bookingService.getAllBookingsForOwner(ownerId, value, request);
