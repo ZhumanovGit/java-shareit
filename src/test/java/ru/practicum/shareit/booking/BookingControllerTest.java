@@ -190,6 +190,24 @@ class BookingControllerTest {
     }
 
     @Test
+    public void getUserBookings_withCustomParams_whenReturnListOfBookings() throws Exception {
+        long userId = 1L;
+        BookingDto first = BookingDto.builder().id(1L).build();
+        BookingDto second = BookingDto.builder().id(2L).build();
+        BookingDto third = BookingDto.builder().id(3L).build();
+        List<BookingDto> result = List.of(first, second, third);
+        when(service.getAllBookingsForUser(anyLong(), any(StateStatus.class), any(Pageable.class))).thenReturn(result);
+
+        mvc.perform(get("/bookings")
+                        .header("X-Sharer-User-Id", userId)
+                        .param("from", "3")
+                        .param("size", "2")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(result)));
+    }
+
+    @Test
     public void getOwnerBookings_whenRequestISCorrectWithAllParams_thenReturnListOfBookings() throws Exception {
         long userId = 1L;
         String from = "0";
@@ -241,6 +259,24 @@ class BookingControllerTest {
 
         mvc.perform(get("/bookings/owner")
                         .header("X-Sharer-User-Id", userId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(result)));
+    }
+
+    @Test
+    public void getOwnerBookings_withCustomParams_whenReturnListOfBookings() throws Exception {
+        long userId = 1L;
+        BookingDto first = BookingDto.builder().id(1L).build();
+        BookingDto second = BookingDto.builder().id(2L).build();
+        BookingDto third = BookingDto.builder().id(3L).build();
+        List<BookingDto> result = List.of(first, second, third);
+        when(service.getAllBookingsForOwner(anyLong(), any(StateStatus.class), any(Pageable.class))).thenReturn(result);
+
+        mvc.perform(get("/bookings/owner")
+                        .header("X-Sharer-User-Id", userId)
+                        .param("from", "3")
+                        .param("size", "2")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().json(mapper.writeValueAsString(result)));

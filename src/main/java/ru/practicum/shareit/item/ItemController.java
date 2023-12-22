@@ -41,11 +41,10 @@ public class ItemController {
     public List<ItemInfoDto> getAllUserItems(@RequestHeader(value = "X-Sharer-User-Id") long ownerId,
                                              @PositiveOrZero @RequestParam(defaultValue = "0") int from,
                                              @Positive @RequestParam(defaultValue = "10") int size) {
-        int page = 0;
+        PageRequest request = PageRequest.of(0, size);
         if (from >= size) {
-            page = (from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size;
+            request = PageRequest.of(((from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size), size);
         }
-        PageRequest request = PageRequest.of(page, size);
         log.info("Обработка запроса на получение всех вещей пользователя с id = {}", ownerId);
         List<ItemInfoDto> items = itemService.getItemsByOwnerId(ownerId, request);
         log.info("Получены все вещи пользователя с id = {}", ownerId);
@@ -65,11 +64,10 @@ public class ItemController {
     public List<ItemDto> searchItems(@RequestParam(value = "text") String text,
                                      @PositiveOrZero @RequestParam(defaultValue = "0") int from,
                                      @Positive @RequestParam(defaultValue = "10") int size) {
-        int page = 0;
+        PageRequest request = PageRequest.of(0, size);
         if (from >= size) {
-            page = (from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size;
+            request = PageRequest.of(((from + 1) % size == 0 ? ((from + 1) / size) - 1 : (from + 1) / size), size);
         }
-        PageRequest request = PageRequest.of(page, size);
         log.info("Обработка запроса на выполнение поиска по строке {}", text);
         List<ItemDto> items = itemService.getItemsByNameOrDesc(text, request);
         log.info("Получен список длиной {}", items.size());
