@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -21,11 +22,13 @@ import ru.practicum.shareit.item.dto.ItemInfoDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.ItemRequestRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +42,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final ItemRequestRepository requestRepository;
     private final ItemMapper mapper;
     private final BookingMapper bookingMapper;
     private final CommentMapper commentMapper;
@@ -49,6 +53,12 @@ public class ItemServiceImpl implements ItemService {
 
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
+
+        Long requestId = dto.getRequestId();
+        if (requestId != null) {
+            requestRepository.findById(requestId)
+                    .orElseThrow(() -> new NotFoundException("Запроса с id = " + requestId + " не существует"));
+        }
 
         Item item = mapper.itemCreateDtoToItem(dto);
         item.setOwner(owner);
@@ -137,15 +147,18 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ItemInfoDto> getItemsByOwnerId(long ownerId) {
+    public List<ItemInfoDto> getItemsByOwnerId(long ownerId, Pageable pageable) {
 
         userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не найден"));
-
-        List<Item> items = itemRepository.findAllByOwnerId(ownerId);
+        List<Item> items = itemRepository.findAllByOwnerId(ownerId, pageable);
+        if (items.isEmpty()) {
+            return Collections.emptyList();
+        }
         List<Long> itemIds = items.stream()
                 .map(Item::getId)
                 .collect(Collectors.toList());
+
         LocalDateTime now = LocalDateTime.now();
         List<Booking> previousBookings = bookingRepository
                 .findAllByItemIdInAndStartBeforeAndStatusIs(itemIds, now, BookingStatus.APPROVED);
@@ -198,13 +211,13 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ItemDto> getItemsByNameOrDesc(String substring) {
+    public List<ItemDto> getItemsByNameOrDesc(String substring, Pageable pageable) {
         if (substring.isBlank()) {
             return new ArrayList<>();
         }
         String needSubstring = substring.toLowerCase();
 
-        List<Item> items = itemRepository.findAllByNameOrDesc(needSubstring);
+        List<Item> items = itemRepository.findAllByNameOrDesc(needSubstring, pageable);
         return items.stream()
                 .filter(Item::getAvailable)
                 .map(mapper::itemToItemDto)

@@ -21,5 +21,6 @@ public class ItemCreateDto {
     @AssertTrue
     @NotNull
     private Boolean available;
+    private Long requestId;
 
 }

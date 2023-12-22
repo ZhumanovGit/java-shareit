@@ -38,6 +38,9 @@ public class Item {
     @Column(name = "description", nullable = false)
     private String description;
 
+    @Column(name = "request_id")
+    private Long requestId;
+
     @Column(name = "available", nullable = false)
     private Boolean available;
 }

@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item.service;
 
+import org.springframework.data.domain.Pageable;
 import ru.practicum.shareit.item.dto.ItemCreateDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemInfoDto;
@@ -15,9 +16,9 @@ public interface ItemService {
 
     ItemDto getItemById(long id, long requesterId);
 
-    List<ItemInfoDto> getItemsByOwnerId(long ownerId);
+    List<ItemInfoDto> getItemsByOwnerId(long ownerId, Pageable pageable);
 
-    List<ItemDto> getItemsByNameOrDesc(String substring);
+    List<ItemDto> getItemsByNameOrDesc(String substring, Pageable pageable);
 
     void deleteItemById(long id);
 

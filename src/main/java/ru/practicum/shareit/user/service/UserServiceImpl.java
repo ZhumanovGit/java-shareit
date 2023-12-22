@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.comment.CommentRepository;
 import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.ItemRequestRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.dto.UserCreateDto;
@@ -23,6 +24,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
     private final CommentRepository commentRepository;
+    private final ItemRequestRepository requestRepository;
     private final UserMapper mapper;
 
 
@@ -72,6 +74,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUserById(long id) {
         commentRepository.deleteAllByAuthorId(id);
+        requestRepository.deleteAllByOwnerId(id);
         itemRepository.deleteAllByOwnerId(id);
         userRepository.deleteById(id);
     }
@@ -79,6 +82,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUsers() {
         commentRepository.deleteAll();
+        requestRepository.deleteAll();
         itemRepository.deleteAll();
         userRepository.deleteAll();
     }
