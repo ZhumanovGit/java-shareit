@@ -163,6 +163,7 @@ class BookingControllerTest {
                 .andExpect(content().json(mapper.writeValueAsString(result)));
     }
 
+
     @Test
     public void getUserBookings_withCustomParams_whenReturnListOfBookings() throws Exception {
         long userId = 1L;
