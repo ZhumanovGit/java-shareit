@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking.service;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
@@ -46,7 +48,7 @@ public class BookingServiceImpl implements BookingService {
         if (!item.getAvailable()) {
             throw new BookingException("Не найдена свободная вещь с таким id");
         }
-        List<Booking> currentItemBookings = bookingRepository.findAllCurrentBookingsForItem(itemId);
+        List<Booking> currentItemBookings = bookingRepository.checkItemBookings(itemId, dto.getStart(), dto.getEnd());
         if (!currentItemBookings.isEmpty()) {
             throw new BookingException("Данная вещь сейчас находится в аренде");
         }

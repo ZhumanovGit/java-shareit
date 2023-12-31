@@ -22,7 +22,7 @@ class BookingRepositoryTest {
     private BookingRepository bookingRepository;
 
     @Test
-    public void findAllCurrentBookingsForItem_whenDbIsFilled_thenReturnListOfBookings() {
+    public void checkItemBookings_whenDbIsFilled_thenReturnListOfBookings() {
         User owner = entityManager.merge(User.builder().id(1L).name("test").email("test@com").build());
         User booker = entityManager.merge(User.builder().id(2L).name("test").email("test2@com").build());
         Item item = entityManager.merge(Item.builder()
@@ -41,14 +41,14 @@ class BookingRepositoryTest {
                 .status(BookingStatus.APPROVED)
                 .build());
 
-        List<Booking> bookings = bookingRepository.findAllCurrentBookingsForItem(item.getId());
+        List<Booking> bookings = bookingRepository.checkItemBookings(item.getId(), first.getStart(), first.getEnd());
 
         assertEquals(1, bookings.size());
     }
 
     @Test
     public void findAllCurrentBookingsForItem_whenDbIsEmpty_thenReturnEmptyList() {
-        List<Booking> bookings = bookingRepository.findAllCurrentBookingsForItem(1L);
+        List<Booking> bookings = bookingRepository.checkItemBookings(1L, LocalDateTime.now(), LocalDateTime.now());
 
         assertEquals(0, bookings.size());
     }

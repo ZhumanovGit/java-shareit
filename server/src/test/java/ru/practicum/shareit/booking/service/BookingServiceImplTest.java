@@ -150,7 +150,7 @@ class BookingServiceImplTest {
         String expectedResponse = "Данная вещь сейчас находится в аренде";
         when(userRepository.findById(1L)).thenReturn(Optional.of(booker));
         when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
-        when(bookingRepository.findAllCurrentBookingsForItem(anyLong())).thenReturn(List.of(Booking.builder()
+        when(bookingRepository.checkItemBookings(anyLong(), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(List.of(Booking.builder()
                 .id(3L)
                 .build()));
 

@@ -19,10 +19,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long>, Queryds
     @Query("select b " +
             "from Booking as b " +
             "where b.item.id = ?1 " +
-            "and b.start < localtimestamp " +
-            "and b.end > localtimestamp " +
+            "and b.start < ?3 " +
+            "and b.end > ?2 " +
             "and b.status != 'REJECTED'")
-    List<Booking> findAllCurrentBookingsForItem(long itemId);
+    List<Booking> checkItemBookings(long itemId, LocalDateTime start, LocalDateTime end);
 
     Optional<Booking> findFirstBy(BooleanExpression e, Sort sort);
 

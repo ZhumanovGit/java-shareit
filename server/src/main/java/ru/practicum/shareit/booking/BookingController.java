@@ -18,8 +18,6 @@ import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.StateStatus;
 import ru.practicum.shareit.booking.service.BookingService;
 
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
@@ -61,8 +59,8 @@ public class BookingController {
     @GetMapping
     public List<BookingDto> getUserBookings(@RequestParam(name = "state", required = false, defaultValue = "ALL") String state,
                                             @RequestHeader("X-Sharer-User-Id") long userId,
-                                            @PositiveOrZero @RequestParam(defaultValue = "0") int from,
-                                            @Positive @RequestParam(required = false, defaultValue = "10") int size) {
+                                            @RequestParam(defaultValue = "0") int from,
+                                            @RequestParam(required = false, defaultValue = "10") int size) {
         Sort startDesc = Sort.by(Sort.Direction.DESC, "start");
         PageRequest request = PageRequest.of(from / size, size, startDesc);
         StateStatus value = StateStatus.getFromString(state);
@@ -76,8 +74,8 @@ public class BookingController {
     @GetMapping("/owner")
     public List<BookingDto> getOwnerBookings(@RequestParam(name = "state", required = false, defaultValue = "ALL") String state,
                                              @RequestHeader("X-Sharer-User-Id") long ownerId,
-                                             @PositiveOrZero @RequestParam(defaultValue = "0") int from,
-                                             @Positive @RequestParam(required = false, defaultValue = "10") Integer size) {
+                                             @RequestParam(defaultValue = "0") int from,
+                                             @RequestParam(required = false, defaultValue = "10") Integer size) {
         Sort startDesc = Sort.by(Sort.Direction.DESC, "start");
         PageRequest request = PageRequest.of(from / size, size, startDesc);
         StateStatus value = StateStatus.getFromString(state);

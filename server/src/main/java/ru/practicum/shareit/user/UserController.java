@@ -15,7 +15,6 @@ import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.service.UserService;
 
-import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -50,7 +49,7 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    public UserDto patchUser(@PathVariable long userId, @Valid @RequestBody UserUpdateDto dto) {
+    public UserDto patchUser(@PathVariable long userId, @RequestBody UserUpdateDto dto) {
         log.info("Обработка запроса на частичное обновление пользователя с id = {}", userId);
         UserDto updatedUser = userService.patchUser(userId, dto);
         log.info("Обновлены параметры пользователя с id = {}", updatedUser.getId());
