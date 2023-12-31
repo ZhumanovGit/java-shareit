@@ -23,6 +23,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/shareit
       - SPRING_DATASOURCE_USERNAME=shareit
       - SPRING_DATASOURCE_PASSWORD=shareit
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
       - TZ=Europe/Moscow
 
   db:
