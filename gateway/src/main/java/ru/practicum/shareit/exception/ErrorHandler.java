@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice(basePackages = "ru.practicum.shareit")
 public class ErrorHandler {
-
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ExceptionResponse handleValidateException(final ConstraintViolationException e) {

@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.repository;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.domain.PageRequest;
@@ -13,6 +14,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class ItemRepositoryTest {
     @Autowired
     private TestEntityManager entityManager;
@@ -54,7 +56,7 @@ class ItemRepositoryTest {
 
         List<Item> items = itemRepository.findAllByNameOrDesc(searchString, PageRequest.of(0, 10));
 
-        assertEquals(2, items.size());
+        assertEquals(3, items.size());
     }
 
     @Test

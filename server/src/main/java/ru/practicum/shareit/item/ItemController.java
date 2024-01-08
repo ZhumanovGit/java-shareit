@@ -3,6 +3,7 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -36,7 +37,8 @@ public class ItemController {
     public List<ItemInfoDto> getAllUserItems(@RequestHeader(value = "X-Sharer-User-Id") long ownerId,
                                              @RequestParam(defaultValue = "0") int from,
                                              @RequestParam(defaultValue = "10") int size) {
-        PageRequest request = PageRequest.of(from / size, size);
+        Sort sort = Sort.by(Sort.Direction.ASC, "id");
+        PageRequest request = PageRequest.of(from / size, size, sort);
         log.info("Обработка запроса на получение всех вещей пользователя с id = {}", ownerId);
         List<ItemInfoDto> items = itemService.getItemsByOwnerId(ownerId, request);
         log.info("Получены все вещи пользователя с id = {}", ownerId);
@@ -56,7 +58,6 @@ public class ItemController {
     public List<ItemDto> searchItems(@RequestParam(value = "text") String text,
                                      @RequestParam(defaultValue = "0") int from,
                                      @RequestParam(defaultValue = "10") int size) {
-        System.out.println(text);
         PageRequest request = PageRequest.of(from / size, size);
         log.info("Обработка запроса на выполнение поиска по строке {}", text);
         List<ItemDto> items = itemService.getItemsByNameOrDesc(text, request);

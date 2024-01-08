@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.comment.dto.CommentCreateDto;
@@ -49,7 +50,8 @@ class ItemControllerTest {
                 ItemInfoDto.builder().id(1L).build(),
                 ItemInfoDto.builder().id(2L).build()
         );
-        when(itemService.getItemsByOwnerId(userId, PageRequest.of(0, 10))).thenReturn(mockItems);
+        when(itemService.getItemsByOwnerId(userId,
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id")))).thenReturn(mockItems);
 
         mvc.perform(get("/items")
                         .header("X-Sharer-User-Id", userId)
@@ -65,7 +67,8 @@ class ItemControllerTest {
                 ItemInfoDto.builder().id(1L).build(),
                 ItemInfoDto.builder().id(2L).build()
         );
-        when(itemService.getItemsByOwnerId(userId, PageRequest.of(0, 3))).thenReturn(mockItems);
+        when(itemService.getItemsByOwnerId(userId, PageRequest.of(0, 3,
+                Sort.by(Sort.Direction.ASC, "id")))).thenReturn(mockItems);
 
         mvc.perform(get("/items")
                         .header("X-Sharer-User-Id", userId)

@@ -53,7 +53,6 @@ public class ItemController {
                                               @RequestHeader("X-Sharer-User-Id") long userId) {
         log.info("Обработка запроса на выполнение поиска по строке {} c параметрами from = {}, size = {} от пользоввателя с id = {}",
                 text, from, size, userId);
-        System.out.println(text);
         return itemClient.searchItems(text, userId, from, size);
     }
 

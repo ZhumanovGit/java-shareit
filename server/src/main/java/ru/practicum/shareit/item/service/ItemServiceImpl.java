@@ -29,7 +29,6 @@ import ru.practicum.shareit.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -207,7 +206,7 @@ public class ItemServiceImpl implements ItemService {
             result.add(mapper.itemToItemInfoDto(item, itemComments, nextBooking, lastBooking));
         }
 
-        return result.stream().sorted(Comparator.comparing(ItemInfoDto::getId)).collect(Collectors.toList());
+        return result;
     }
 
     @Override

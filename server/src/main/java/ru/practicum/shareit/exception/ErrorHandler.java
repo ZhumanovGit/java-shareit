@@ -1,6 +1,7 @@
 package ru.practicum.shareit.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -36,6 +37,13 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ExceptionResponse handlePostCommentException(final PostCommentException e) {
         log.warn("PostCommentException {}", e.getMessage());
+        return new ExceptionResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ExceptionResponse handleDataIntegrityViolationException(final DataIntegrityViolationException e) {
+        log.warn("DataIntegrityViolationException, {}", e.getMessage());
         return new ExceptionResponse(e.getMessage());
     }
 
